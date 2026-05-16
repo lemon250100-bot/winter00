@@ -1,0 +1,2157 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STUDIO.ELITE - 語言學習與考卷筆記</title>
+    <style>
+        :root { 
+            --primary: #FF4F00; 
+            --bg: #0b1120; 
+            --sb-bg: #1e293b; 
+            --paper: #ffffff; 
+            --sb-w: 320px; 
+            --tb-h: 75px; 
+        }
+        * { 
+            box-sizing: border-box; 
+            outline: none; 
+        }
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; 
+            background: var(--bg); 
+            font-family: 'Inter', system-ui, sans-serif; 
+            display: flex; 
+            color: white; 
+        }
+
+        /* --- 側邊欄佈局 --- */
+        #sidebar { 
+            width: var(--sb-w); 
+            height: 100vh; 
+            background: var(--sb-bg); 
+            border-right: 1px solid rgba(255,255,255,0.1); 
+            display: flex; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+        }
+        .sb-header { 
+            padding: 35px 25px 15px; 
+        }
+        .logo { 
+            font-size: 1.6rem; 
+            font-weight: 900; 
+        }
+        .logo span { 
+            color: var(--primary); 
+        }
+        .sb-search-wrap { 
+            padding: 0 15px 15px; 
+        }
+        #sb-search { 
+            width: 100%; 
+            padding: 10px; 
+            border-radius: 8px; 
+            background: rgba(0,0,0,0.2); 
+            color: white; 
+            border: 1px solid #444; 
+            font-size: 0.85rem; 
+        }
+        .sb-nav { 
+            display: flex; 
+            gap: 10px; 
+            padding: 0 15px 20px; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+        }
+        .btn-sb { 
+            flex: 1; 
+            padding: 12px; 
+            background: rgba(255,255,255,0.08); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            color: white; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 0.8rem; 
+            font-weight: bold; 
+            text-align: center; 
+            transition: all 0.2s;
+        }
+        .btn-sb:hover { 
+            background: var(--primary); 
+        }
+        #explorer { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px; 
+            scrollbar-width: thin; 
+            scrollbar-color: var(--primary) transparent; 
+        }
+        
+        .f-box { 
+            margin-bottom: 25px; 
+            border: 2px solid transparent; 
+            transition: 0.3s; 
+            padding: 5px;
+            border-radius: 8px;
+        }
+        .f-box.drag-over { 
+            border-color: var(--primary); 
+            border-style: dashed; 
+            background: rgba(255,79,0,0.1); 
+        }
+        .f-head { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            margin-bottom: 10px; 
+        }
+        .f-input { 
+            background: transparent; 
+            border: none; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 1rem; 
+            width: 70%; 
+            border-bottom: 1px solid transparent; 
+        }
+        .f-input:focus {
+            border-bottom-color: var(--primary);
+        }
+        .n-list { 
+            margin-left: 15px; 
+            border-left: 1px dashed #444; 
+            padding-left: 10px; 
+        }
+        .n-item { 
+            padding: 10px; 
+            margin: 4px 0; 
+            border-radius: 6px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            font-size: 0.9rem; 
+            color: #94a3b8; 
+            cursor: grab; 
+            background: rgba(255,255,255,0.02); 
+        }
+        .n-item.active { 
+            background: rgba(255, 79, 0, 0.2); 
+            color: var(--primary); 
+            font-weight: bold; 
+        }
+        .n-input { 
+            background: transparent; 
+            border: none; 
+            color: inherit; 
+            font-size: inherit; 
+            width: 80%; 
+        }
+        .btn-del { 
+            opacity: 0.3; 
+            cursor: pointer; 
+            color: white; 
+            background: none; 
+            border: none; 
+            font-size: 1rem;
+            transition: opacity 0.2s;
+        }
+        .btn-del:hover { 
+            opacity: 1; 
+            color: #ff4d4d; 
+        }
+
+        /* --- 主區域與工具列 --- */
+        #main { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            position: relative; 
+        }
+        #toolbar { 
+            height: var(--tb-h); 
+            background: rgba(15, 23, 42, 0.95); 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            display: flex; 
+            align-items: center; 
+            padding: 0 25px; 
+            gap: 12px; 
+            z-index: 100; 
+        }
+        .tool-grp { 
+            display: flex; 
+            gap: 6px; 
+            align-items: center; 
+            border-right: 1px solid #444; 
+            padding-right: 12px; 
+        }
+        .btn-t { 
+            width: 38px; 
+            height: 38px; 
+            border-radius: 8px; 
+            border: 1px solid #444; 
+            background: #222; 
+            color: white; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            transition: background 0.2s;
+        }
+        .btn-t:hover { 
+            background: var(--primary); 
+        }
+        .save-btn { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 10px 25px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            margin-left: auto; 
+        }
+
+        #canvas { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 50px 0 400px 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 40px; 
+        }
+        .paper-page { 
+            width: 820px; 
+            min-height: 1160px; 
+            max-height: 1160px; 
+            background: white; 
+            color: #1e293b; 
+            padding: 80px 100px; 
+            box-shadow: 0 30px 70px rgba(0,0,0,0.6); 
+            outline: none; 
+            line-height: 1.8; 
+            font-size: 1.15rem; 
+            position: relative; 
+            word-wrap: break-word; 
+            overflow: hidden; 
+            transition: background 0.3s, color 0.3s; 
+        }
+        .paper-page::after { 
+            content: "Page " attr(data-page); 
+            position: absolute; 
+            bottom: 30px; 
+            right: 40px; 
+            font-size: 0.8rem; 
+            color: #ddd; 
+            font-style: italic; 
+        }
+
+        /* --- 智慧泡泡 --- */
+        #bubble { 
+            display: none; 
+            position: absolute; 
+            background: #0f172a; 
+            color: white; 
+            border-radius: 50px; 
+            padding: 8px 15px; 
+            z-index: 9999; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            align-items: center; 
+            gap: 8px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+        }
+        .btn-b { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 6px 18px; 
+            border-radius: 20px; 
+            font-size: 0.85rem; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
+
+        @media print { 
+            #sidebar, #toolbar, #bubble { display: none !important; } 
+            #canvas { padding: 0 !important; } 
+            .paper-page { box-shadow: none !important; page-break-after: always !important; } 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 20px 0; 
+            border: 1px solid #ddd; 
+            table-layout: fixed; 
+        }
+        td { 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            color: inherit; 
+            word-break: break-all; 
+            min-height: 1.5em; 
+        }
+    </style>
+</head>
+<body>
+
+    <aside id="sidebar">
+        <div class="sb-header"><div class="logo">STUDIO<span>.ELITE</span></div></div>
+        <div class="sb-search-wrap"><input type="text" id="sb-search" placeholder="🔍 搜尋標題..." oninput="searchNote(this.value)"></div>
+        <div class="sb-nav">
+            <button class="btn-sb" onclick="addFolder()">📁 +資料夾</button>
+            <button class="btn-sb" onclick="addNote()">📄 +新章節</button>
+        </div>
+        <div id="explorer"></div> 
+<div class="sb-footer" style="padding: 10px 15px;">
+            <button class="btn-sb" style="width:100%; background:#8b5cf6; margin-bottom:8px;" onclick="toggleGameCenter()">🎮 語言遊戲中心</button>
+            <button class="btn-sb" style="width:100%" onclick="exportJSON()">💾 備份 JSON 檔案</button>
+        </div>
+    </aside>
+
+  <main id="main">
+        <header id="toolbar">
+            <div class="tool-grp">
+                <button class="btn-t" onclick="exec('undo')">↶</button>
+                <button class="btn-t" onclick="exec('redo')">↷</button>
+                <button class="btn-t" onclick="exec('bold')">B</button>
+                <button class="btn-t" onclick="exec('hiliteColor', '#fef08a')">🖍️</button>
+                <button class="btn-t" onclick="insertTable()" title="插入表格">📅</button>
+            </div>
+            <button class="btn-sb" style="background:#059669; width:100px; border:none;" onclick="window.print()">🖨️ PDF</button>
+            <button class="save-btn" id="save-status" onclick="save()">儲存內容</button>
+        </header>
+
+        <section id="canvas">
+            <!-- 遊戲中心主容器 -->
+            <div id="game-center" style="display:none; width: 820px; background: #1e293b; border-radius: 12px; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); color: white; margin-bottom: 20px;">
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span>📅 <span id="checkin-status">今日尚未簽到</span></span>
+                        <span id="streak-badge" style="margin-left:10px; background:#ef4444; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:bold; display:none;">🔥 連續 0 天</span>
+                        <span style="margin-left:15px; background:#f59e0b; color:#0f172a; padding:4px 12px; border-radius:20px; font-weight:bold;">💰 金幣: <span id="user-coins">0</span></span>
+                    </div>
+                    <button class="btn-sb" id="btn-checkin" style="background:#059669; max-width:120px;" onclick="doCheckin()">每日簽到</button>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn-sb" onclick="switchTab('play')">🕹️ 開始遊玩</button>
+                    <button class="btn-sb" onclick="switchTab('import')">📥 匯入題目</button>
+                    <button class="btn-sb" style="background:#e11d48;" onclick="switchTab('wrong')">📕 錯題本 (<span id="wrong-count">0</span>)</button>
+                    <button class="btn-sb" style="background:#d97706;" onclick="switchTab('achieve')">🏅 成就系統</button>
+                    <button class="btn-sb" style="background:#10b981;" onclick="switchTab('shop')">🏪 金幣商店</button>
+                </div>
+                
+                <div id="g-tab-import" style="display: none;">
+                    <h3>📥 極簡化題庫匯入</h3>
+                    <p style="font-size:0.8rem; color:#94a3b8; margin-bottom:10px;">貼入純文字即可！格式：題目 | 正確答案 | 選項1(選填) | 選項2(選填) | 選項3(選填)</p>
+                    <textarea id="import-json-area" style="width: 100%; height: 180px; background: #0f172a; color: #34d399; border: 1px solid #444; border-radius: 8px; padding: 10px; font-family: monospace;" placeholder="範例：
+荷文第一章
+今天天氣好嗎？ | 好 | 不好 | 非常好 | 差
+爸爸去哪裡？ | 工廠
+
+韓文基礎
+謝謝的韓文 | 고맙습니다"></textarea>
+                    <button class="btn-sb" style="background:var(--primary); margin-top:10px;" onclick="importQuestions()">確認解譯並匯入</button>
+                </div>
+                
+                <div id="g-tab-play">
+                    <h3>🎯 勾選遊玩小單元 (可複選)</h3>
+                    <div id="game-chapter-list" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;"></div>
+                    <button class="btn-sb" style="background:#2563eb; width:100%; font-size:1.1rem; padding:12px;" onclick="startGame(false)">🚀 開始單元測驗</button>
+                    
+                    <div id="game-playground" style="display:none; margin-top:20px; background:#0f172a; border-radius:8px; padding:20px; border:1px solid #334155;">
+                        <div style="display:flex; justify-content:space-between; color:#94a3b8; margin-bottom:15px;"><span id="g-progress">題目：0 / 0</span><span id="g-score">得分：0</span></div>
+                        <div id="g-q-text" style="font-size:1.2rem; font-weight:bold; margin-bottom:15px;"></div>
+                        <div id="game-answer-zone"></div>
+                        <button class="btn-sb" id="g-next-btn" style="background:var(--primary); margin-top:15px; display:none;" onclick="nextQuestion()">下一題 ➔</button>
+                    </div>
+                </div>
+
+                <div id="g-tab-wrong" style="display: none;">
+                    <h3>📕 自動錯題累積本</h3>
+                    <div id="wrong-notice-box" style="background:rgba(225,29,72,0.1); border:1px solid #e11d48; padding:15px; border-radius:8px; margin-bottom:15px; text-align:center;">
+                        目前錯題累計數：<b style="color:#f43f5e; font-size:1.2rem;" id="wrong-notice-num">0</b> / 10 題。<br>
+                        <span id="wrong-lock-text" style="font-size:0.85rem; color:#fda4af;">⚠️ 錯題本必須累積滿 10 題以上，才能解鎖開啟地獄複清模式！</span>
+                    </div>
+                    <button class="btn-sb" id="btn-start-wrong" style="background:#e11d48; width:100%; padding:12px; font-size:1.1rem; display:none;" onclick="startGame(true)">🔥 開啟錯題魔鬼複習 (答對自動消去)</button>
+                </div>
+                
+                <div id="g-tab-achieve" style="display: none;">
+                    <h3>🏅 階梯式成就榜</h3>
+                    <div id="achievement-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
+                </div>
+                
+                <div id="g-tab-shop" style="display: none;">
+                    <h3>🏪 補給站 & 隱藏外觀</h3>
+                    <div id="shop-item-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                </div>
+            </div>
+
+            <!-- A4 筆記紙張 -->
+            <div id="pages"></div>
+        </section>
+
+        <div id="bubble">
+            <button class="btn-b" id="btn-speak">🔊 朗讀發音</button>
+            <button onclick="hideBubble()" style="background:none; border:none; color:#555; cursor:pointer; margin-left: 5px;">✕</button>
+        </div>
+    </main>
+
+    <script>
+        // --- 1. 全域資料庫宣告 ---
+        let db = JSON.parse(localStorage.getItem('dutch_studio_drag_fix')) || {
+            folders: [{ id: 1, name: "我的韓荷筆記", notes: ["第一章：起始"], open: true }],
+            notes: { "第一章：起始": [""] }
+        };
+        let gameData = (function() {
+            try {
+                let saved = localStorage.getItem('studio_game_data');
+                if (saved) {
+                    let parsed = JSON.parse(saved);
+                    if (parsed && typeof parsed === 'object') {
+                        // 如果讀取出來的Coins是0或不存在，給予基礎值防護
+                        if (parsed.coins === undefined) { parsed.coins = 100; }
+                        return parsed;
+                    }
+                }
+            } catch (e) {
+                console.error("讀取儲存資料失敗:", e);
+            }
+            return {
+                checkinLog: {}, 
+                questions: {}, 
+                totalCheckins: 0, 
+                totalCorrect: 0, 
+                unlockedAchievements: {}, 
+                claimedAchievements: {}, 
+                coins: 100, 
+                items: { eraser: 1, glasses: 0 }, 
+                unlockedThemes: { default: true }, 
+                currentTheme: 'default',
+                streak: 0, 
+                lastCheckinDate: '', 
+                wrongAnswers: [],
+                maxSingleScore: 0
+            };
+        })();
+
+
+        // 確保防護快取欄位安全存在
+        if (!gameData.unlockedAchievements) gameData.unlockedAchievements = {};
+        if (!gameData.claimedAchievements) gameData.claimedAchievements = {};
+        if (!gameData.wrongAnswers) gameData.wrongAnswers = [];
+        if (!gameData.items) gameData.items = { eraser: 1, glasses: 0 };
+        if (!gameData.unlockedThemes) gameData.unlockedThemes = { default: true };
+        if (!gameData.questions) gameData.questions = {};
+
+        let curN = Object.keys(db.notes)[0] || "第一章：起始";
+        let autosaveTimer;
+        let selectedText = "";
+        let dragN = null;
+        let dragF = null;
+        let currentPool = [];
+        let curQIdx = 0;
+        let score = 0;
+        let gameMode = false;
+        let isWrongReviewMode = false;
+        
+        const pgContainer = document.getElementById('pages');
+        const bubble = document.getElementById('bubble');
+        // 5大成就任務配置 (明確宣告指標函數與對象)
+                // --- 6. 豪華終極版：105 條階梯式成就任務配置 (絕不簡化、5的倍數精準給獎、去除每日2次錯誤語句) ---
+        const ACHIEVEMENTS = [
+            // === 【超簡單入門組：獎勵 5 ~ 25 金幣】 ===
+            { id: 'a_001', name: '🌱 新手啟航', desc: '在遊戲中累計答對 1 題', r: 5, target: 1, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_002', name: '📅 踏出第一步', desc: '不限天數累計完成簽到 1 次', r: 5, target: 1, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_004', name: '📄 筆記入門', desc: '在筆記區建立任意小章節', r: 5, target: 1, cur: function(d) { return Object.keys(db.notes).length || 0; } },
+            { id: 'a_005', name: '🧠 小試身手', desc: '在遊戲中累計答對 2 題', r: 10, target: 2, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_006', name: '📅 習慣養成', desc: '不限天數累計完成簽到 2 次', r: 10, target: 2, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_007', name: '🔥 穩定加溫', desc: '達成連續登入簽到 2 天', r: 10, target: 2, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_008', name: '🧠 渐入佳境', desc: '在遊戲中累計答對 3 題', r: 15, target: 3, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_009', name: '🧠 基礎紮實', desc: '在遊戲中累計答對 4 題', r: 15, target: 4, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_010', name: '🧠 五福臨門', desc: '在遊戲中累計答對 5 題', r: 20, target: 5, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_011', name: '📅 勤奮學子', desc: '不限天數累計完成簽到 3 次', r: 20, target: 3, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_012', name: '🔥 欲罷不能', desc: '達成連續登入簽到 3 天', r: 25, target: 3, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_013', name: '🪙 初次致富', desc: '錢包中的金幣數量累計達到 150 枚', r: 25, target: 150, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_014', name: '🧠 單字工兵', desc: '在遊戲中累計答對 6 題', r: 25, target: 6, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_015', name: '🧠 語感初顯', desc: '在遊戲中累計答對 7 題', r: 25, target: 7, cur: function(d) { return d.totalCorrect || 0; } },
+
+            // === 【中等常規組：獎勵 30 ~ 150 金幣】 ===
+            { id: 'a_016', name: '🧠 八向通達', desc: '在遊戲中累計答對 8 題', r: 30, target: 8, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_017', name: '🧠 長線學習', desc: '在遊戲中累計答對 9 題', r: 30, target: 9, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_018', name: '🎯 語文熟手', desc: '在遊戲中累計答對 10 題', r: 35, target: 10, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_019', name: '📅 簽到狂熱', desc: '不限天數累計完成簽到 4 次', r: 35, target: 4, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_020', name: '📅 五大三粗', desc: '不限天數累計完成簽到 5 次', r: 40, target: 5, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_021', name: '🔥 火熱連擊', desc: '達成連續登入簽到 4 天', r: 40, target: 4, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_022', name: '🔥 週半狂熱', desc: '達成連續登入簽到 5 天', r: 45, target: 5, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_023', name: '🧠 十一奉獻', desc: '在遊戲中累計答對 11 題', r: 45, target: 11, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_024', name: '🧠 十二星宮', desc: '在遊戲中累計答對 12 題', r: 50, target: 12, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_025', name: '🧠 十三太保', desc: '在遊戲中累計答對 13 題', r: 50, target: 13, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_026', name: '🧠 十四主星', desc: '在遊戲中累計答對 14 題', r: 55, target: 14, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_027', name: '🧠 滿月突破', desc: '在遊戲中累計答對 15 題', r: 55, target: 15, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_028', name: '🧠 甜蜜十六', desc: '在遊戲中累計答對 16 題', r: 60, target: 16, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_029', name: '🧠 十七狂熱', desc: '在遊戲中累計答對 17 題', r: 60, target: 17, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_030', name: '🧠 十八羅漢', desc: '在遊戲中累計答對 18 題', r: 65, target: 18, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_031', name: '🧠 十九不惑', desc: '在遊戲中累計答對 19 題', r: 65, target: 19, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_032', name: '🎯 雙十精銳', desc: '在遊戲中累計答對 20 題', r: 70, target: 20, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_033', name: '📅 持之以恆', desc: '不限天數累計完成簽到 6 次', r: 70, target: 6, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_034', name: '📅 一週之約', desc: '不限天數累計完成簽到 7 次', r: 75, target: 7, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_035', name: '📅 突破重圍', desc: '不限天數累計完成簽到 8 次', r: 75, target: 8, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_036', name: '📅 九九歸一', desc: '不限天數累計完成簽到 9 次', r: 80, target: 9, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_037', name: '📅 十全十美', desc: '不限天數累計完成簽到 10 次', r: 80, target: 10, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_038', name: '🔥 連登六日', desc: '達成連續登入簽到 6 天', r: 85, target: 6, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_039', name: '🔥 圓滿一週', desc: '達成連續登入簽到 7 天', r: 85, target: 7, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_040', name: '🔥 八仙過海', desc: '達成連續登入簽到 8 天', r: 90, target: 8, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_041', name: '🔥 九久長存', desc: '達成連續登入簽到 9 天', r: 90, target: 9, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_042', name: '🔥 十全大補', desc: '達成連續登入簽到 10 天', r: 95, target: 10, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_043', name: '🪙 資本家', desc: '錢包中的金幣數量累計達到 300 枚', r: 95, target: 300, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_044', name: '🪙 小有資產', desc: '錢包中的金幣數量累計達到 500 枚', r: 100, target: 500, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_045', name: '🧠 廿一新貴', desc: '在遊戲中累計答對 21 題', r: 100, target: 21, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_046', name: '🧠 廿二傳奇', desc: '在遊戲中累計答對 22 題', r: 105, target: 22, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_047', name: '🧠 廿三神蹟', desc: '在遊戲中累計答對 23 題', r: 105, target: 23, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_048', name: '🧠 廿四節氣', desc: '在遊戲中累計答對 24 題', r: 110, target: 24, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_049', name: '🧠 半百里程半路', desc: '在遊戲中累計答對 25 題', r: 110, target: 25, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_050', name: '🧠 廿六軍規', desc: '在遊戲中累計答對 26 題', r: 115, target: 26, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_051', name: '🧠 廿七大限', desc: '在遊戲中累計答對 27 題', r: 115, target: 27, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_052', name: '🧠 廿八星宿', desc: '在遊戲中累計答對 28 題', r: 120, target: 28, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_053', name: '🧠 廿九難關', desc: '在遊戲中累計答對 29 題', r: 120, target: 29, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_054', name: '🎯 語文高階熟手', desc: '在遊戲中累計答對 30 題', r: 125, target: 30, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_055', name: '🧠 卅一建功', desc: '在遊戲中累計答對 31 題', r: 125, target: 31, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_056', name: '🧠 卅二玄機', desc: '在遊戲中累計答對 32 題', r: 130, target: 32, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_057', name: '🧠 卅三法寶', desc: '在遊戲中累計答對 33 題', r: 130, target: 33, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_058', name: '🧠 卅四聖賢', desc: '在遊戲中累計答對 34 題', r: 135, target: 34, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_059', name: '🧠 卅五大計', desc: '在遊戲中累計答對 35 題', r: 135, target: 35, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_060', name: '🧠 卅六天罡', desc: '在遊戲中累計答對 36 題', r: 140, target: 36, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_061', name: '🧠 卅七洞天', desc: '在遊戲中累計答對 37 題', r: 140, target: 37, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_062', name: '🧠 卅八宏願', desc: '在遊戲中累計答對 38 題', r: 145, target: 38, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_063', name: '🧠 卅九絕響', desc: '在遊戲中累計答對 39 題', r: 145, target: 39, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_064', name: '🎯 曉知不惑四十', desc: '在遊戲中累計答對 40 題', r: 150, target: 40, cur: function(d) { return d.totalCorrect || 0; } },
+
+            // === 【高階進階組：獎勵 160 ~ 600 金幣】 ===
+            { id: 'a_065', name: '🧠 四一豪傑', desc: '在遊戲中累計答對 41 題', r: 160, target: 41, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_066', name: '🧠 四二風雲', desc: '在遊戲中累計答對 42 題', r: 170, target: 42, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_067', name: '🧠 四三群英', desc: '在遊戲中累計答對 43 題', r: 180, target: 43, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_068', name: '🧠 四四乾坤', desc: '在遊戲中累計答對 44 題', r: 190, target: 44, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_069', name: '🧠 四五中原', desc: '在遊戲中累計答對 45 題', r: 200, target: 45, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_070', name: '🧠 四六金鋼', desc: '在遊戲中累計答對 46 題', r: 210, target: 46, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_071', name: '🧠 四七星火', desc: '在遊戲中累計答對 47 題', r: 220, target: 47, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_072', name: '🧠 四八神威', desc: '在遊戲中累計答對 48 題', r: 230, target: 48, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_073', name: '🧠 四九歸宗', desc: '在遊戲中累計答對 49 題', r: 240, target: 49, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_074', name: '🎯 語文半百功成', desc: '在遊戲中累計答對 50 題', r: 250, target: 50, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_075', name: '📅 半月堅持', desc: '不限天數累計完成簽到 15 次', r: 260, target: 15, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_076', name: '📅 廿日大關', desc: '不限天數累計完成簽到 20 次', r: 280, target: 20, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_077', name: '📅 卅日圓滿滿月', desc: '不限天數累計完成簽到 30 次', r: 300, target: 30, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_078', name: '🔥 半月超連擊', desc: '達成連續登入簽到 15 天', r: 325, target: 15, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_079', name: '🔥 廿日烽火連天', desc: '達成連續登入簽到 20 天', r: 350, target: 20, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_080', name: '🔥 卅日無間斷地獄', desc: '達成連續登入簽到 30 天', r: 400, target: 30, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_081', name: '🪙 地主階級', desc: '錢包中的金幣數量累計達到 1000 枚', r: 425, target: 1000, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_082', name: '🪙 輕奢土豪', desc: '錢包中的金幣數量累計達到 2000 枚', r: 450, target: 2000, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_083', name: '🪙 富甲一方', desc: '錢包中的金幣數量累計達到 3500 枚', r: 500, target: 3500, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_084', name: '👑 完美通關紀錄', desc: '單場測驗獲得 100 分以上', r: 550, target: 100, cur: function(d) { return d.maxSingleScore || 0; } },
+            { id: 'a_085', name: '👑 雙倍完美神蹟', desc: '單場測驗獲得 200 分以上', r: 600, target: 200, cur: function(d) { return d.maxSingleScore || 0; } },
+
+            // === 【超硬核骨灰終極組：獎勵 700 ~ 5000 金幣】 ===
+            { id: 'a_086', name: '🎯 語文大師突破', desc: '在遊戲中累計答對 60 題', r: 700, target: 60, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_087', name: '🎯 七星高照名家', desc: '在遊戲中累計答對 70 題', r: 800, target: 70, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_088', name: '🎯 八面玲瓏巨擘', desc: '在遊戲中累計答對 80 題', r: 900, target: 80, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_089', name: '🎯 九天攬月宗師', desc: '在遊戲中累計答對 90 題', r: 1000, target: 90, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_090', name: '👑 百里挑一泰斗', desc: '在遊戲中累計答對 100 題', r: 1200, target: 100, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_091', name: '👑 雙百齊鳴聖手', desc: '在遊戲中累計答對 120 題', r: 1400, target: 120, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_092', name: '👑 百五之尊至高', desc: '在遊戲中累計答對 150 題', r: 1600, target: 150, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_093', name: '🌌 終極骨灰學者', desc: '在遊戲中累計答對 200 題', r: 2000, target: 200, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_094', name: '🌌 詞海無涯先知', desc: '在遊戲中累計答對 300 題', r: 2500, target: 300, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_095', name: '🌌 終焉語言之神', desc: '在遊戲中累計答對 500 題', r: 3500, target: 500, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_096', name: '📅 季考之試', desc: '不限天數累計完成簽到 60 次', r: 1100, target: 60, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_097', name: '📅 半載苦讀', desc: '不限天數累計完成簽到 100 次', r: 1500, target: 100, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_098', name: '📅 歲月史詩見證', desc: '不限天數累計完成簽到 200 次', r: 3000, target: 200, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_099', name: '🔥 雙月鐵人瘋狂', desc: '達成連續登入簽到 60 天', r: 1800, target: 60, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_100', name: '🔥 百日飛昇真仙', desc: '達成連續登入簽到 100 天', r: 4000, target: 100, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_101', name: '🪙 國庫級巨富', desc: '錢包中的金幣數量累計達到 5000 枚', r: 1500, target: 5000, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_102', name: '🪙 富可敵國財閥', desc: '錢包中的金幣數量累計達到 8000 枚', r: 2500, target: 8000, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_103', name: '🪙 富貴逼人終極皇族', desc: '錢包中的金幣數量累計達到 15000 枚', r: 5000, target: 15000, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_104', name: '👑 頂天立地極限大帝', desc: '單場測驗獲得 300 分以上', r: 2500, target: 300, cur: function(d) { return d.maxSingleScore || 0; } },
+            { id: 'a_105', name: '🌌 萬載不拔永恆至尊', desc: '單場測驗獲得 500 分以上', r: 5000, target: 500, cur: function(d) { return d.maxSingleScore || 0; } },
+            { id: 'a_106', name: '🐣 語文小萌新', desc: '在遊戲中累計答對 2 題', r: 5, target: 2, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_107', name: '📅 雙喜臨門開局', desc: '不限天數累計完成簽到 2 次', r: 5, target: 2, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_108', name: '📄 雙規筆記本', desc: '在筆記區建立 2 個小章節', r: 5, target: 2, cur: function(d) { return Object.keys(db.notes).length || 0; } },
+            { id: 'a_109', name: '🧠 倒吃甘蔗', desc: '在遊戲中累計答對 3 題', r: 10, target: 3, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_110', name: '🧠 步步高升', desc: '在遊戲中累計答對 4 題', r: 10, target: 4, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_111', name: '🧠 六六大順入門', desc: '在遊戲中累計答對 6 題', r: 15, target: 6, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_112', name: '📅 簽到新里程', desc: '不限天數累計完成簽到 3 次', r: 15, target: 3, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_113', name: '🧠 幸運之七', desc: '在遊戲中累計答對 7 題', r: 20, target: 7, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_114', name: '🧠 穩健的步伐', desc: '在遊戲中累計答對 8 題', r: 20, target: 8, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_115', name: '🧠 挑戰者姿態', desc: '在遊戲中累計答對 9 題', r: 25, target: 9, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_116', name: '📅 超群不凡', desc: '不限天數累計完成簽到 4 次', r: 25, target: 4, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_117', name: '🧠 十道全能', desc: '在遊戲中累計答對 10 題', r: 30, target: 10, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_118', name: '📅 雙手成就', desc: '不限天數累計完成簽到 5 次', r: 30, target: 5, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_119', name: '🔥 火焰延續', desc: '達成連續登入簽到 2 天', r: 35, target: 2, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_120', name: '🔥 勢不可擋', desc: '達成連續登入簽到 3 天', r: 35, target: 3, cur: function(d) { return d.streak || 0; } },
+
+            // === 【第二波擴充：中等熟練組：獎勵 40 ~ 200 金幣】 ===
+            { id: 'a_121', name: '🧠 十一精兵', desc: '在遊戲中累計答對 11 題', r: 40, target: 11, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_122', name: '🧠 十二先鋒', desc: '在遊戲中累計答對 12 題', r: 40, target: 12, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_123', name: '🧠 十三金鋼', desc: '在遊戲中累計答對 13 題', r: 45, target: 13, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_124', name: '🧠 十四游俠', desc: '在遊戲中累計答對 14 題', r: 45, target: 14, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_125', name: '🧠 十五圓滿初階', desc: '在遊戲中累計答對 15 題', r: 50, target: 15, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_126', name: '🧠 十六守衛', desc: '在遊戲中累計答對 16 題', r: 50, target: 16, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_127', name: '🧠 十七猛將', desc: '在遊戲中累計答對 17 題', r: 55, target: 17, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_128', name: '🧠 十八宗師初探', desc: '在遊戲中累計答對 18 題', r: 55, target: 18, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_129', name: '🧠 十九遠征', desc: '在遊戲中累計答對 19 題', r: 60, target: 19, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_130', name: '🎯 二十不惑突破', desc: '在遊戲中累計答對 20 題', r: 60, target: 20, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_131', name: '🧠 廿一強襲', desc: '在遊戲中累計答對 21 題', r: 65, target: 21, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_132', name: '🧠 廿二禁衛', desc: '在遊戲中累計答對 22 題', r: 65, target: 22, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_133', name: '🧠 廿三狂飆', desc: '在遊戲中累計答對 23 題', r: 70, target: 23, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_134', name: '🧠 廿四戰隊', desc: '在遊戲中累計答對 24 題', r: 70, target: 24, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_135', name: '🧠 廿五中流砥柱', desc: '在遊戲中累計答對 25 題', r: 75, target: 25, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_136', name: '🧠 廿六突擊', desc: '在遊戲中累計答對 26 題', r: 75, target: 26, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_137', name: '🧠 廿七破曉', desc: '在遊戲中累計答對 27 題', r: 80, target: 27, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_138', name: '🧠 廿八近衛', desc: '在遊戲中累計答對 28 題', r: 80, target: 28, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_139', name: '🧠 廿九風暴', desc: '在遊戲中累計答對 29 題', r: 85, target: 29, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_140', name: '🎯 三十而立豐碑', desc: '在遊戲中累計答對 30 題', r: 85, target: 30, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_141', name: '🧠 卅一神射', desc: '在遊戲中累計答對 31 題', r: 90, target: 31, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_142', name: '🧠 卅二重裝', desc: '在遊戲中累計答對 32 題', r: 90, target: 32, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_143', name: '🧠 卅三神威精銳', desc: '在遊戲中累計答對 33 題', r: 95, target: 33, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_144', name: '🧠 卅四鐵騎', desc: '在遊戲中累計答對 34 題', r: 95, target: 34, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_145', name: '🧠 卅五破陣', desc: '在遊戲中累計答對 35 題', r: 100, target: 35, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_146', name: '🧠 卅六神刀', desc: '在遊戲中累計答對 36 題', r: 100, target: 36, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_147', name: '🧠 卅七狂劍', desc: '在遊戲中累計答對 37 題', r: 105, target: 37, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_148', name: '🧠 卅八疾風', desc: '在遊戲中累計答對 38 題', r: 105, target: 38, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_149', name: '🧠 卅九怒火', desc: '在遊戲中累計答對 39 題', r: 110, target: 39, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_150', name: '🎯 四十不惑精準', desc: '在遊戲中累計答對 40 題', r: 110, target: 40, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_151', name: '🧠 四一獵手', desc: '在遊戲中累計答對 41 題', r: 115, target: 41, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_152', name: '🧠 四二刺客', desc: '在遊戲中累計答對 42 題', r: 115, target: 42, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_153', name: '🧠 四三影武', desc: '在遊戲中累計答對 43 題', r: 120, target: 43, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_154', name: '🧠 四四死神', desc: '在遊戲中累計答對 44 題', r: 120, target: 44, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_155', name: '🧠 四五聖光', desc: '在遊戲中累計答對 45 題', r: 125, target: 45, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_156', name: '🧠 四六雷霆', desc: '在遊戲中累計答對 46 題', r: 125, target: 46, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_157', name: '🧠 四七烈焰', desc: '在遊戲中累計答對 47 題', r: 130, target: 47, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_158', name: '🧠 四八寒冰', desc: '在遊戲中累計答對 48 題', r: 130, target: 48, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_159', name: '🧠 四九劇毒', desc: '在遊戲中累計答對 49 題', r: 135, target: 49, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_160', name: '🎯 五十知天命大成', desc: '在遊戲中累計答對 50 題', r: 135, target: 50, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_161', name: '📅 勤勉不懈雙週', desc: '不限天數累計完成簽到 6 次', r: 140, target: 6, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_162', name: '📅 完美一週累計', desc: '不限天數累計完成簽到 7 次', r: 140, target: 7, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_163', name: '📅 八方朝貢簽到', desc: '不限天數累計完成簽到 8 次', r: 145, target: 8, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_164', name: '📅 長治久安累計', desc: '不限天數累計完成簽到 9 次', r: 145, target: 9, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_165', name: '📅 十度金身修煉', desc: '不限天數累計完成簽到 10 次', r: 150, target: 10, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_166', name: '🔥 連續挑戰一週', desc: '達成連續登入簽到 4 天', r: 155, target: 4, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_167', name: '🔥 烽火不滅五日', desc: '達成連續登入簽到 5 天', r: 160, target: 5, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_168', name: '🔥 六六大順連登', desc: '達成連續登入簽到 6 天', r: 165, target: 6, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_169', name: '🔥 七星高照連登', desc: '達成連續登入簽到 7 天', r: 170, target: 7, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_170', name: '🪙 小有存款理財', desc: '錢包中的金幣數量累計達到 200 枚', r: 175, target: 200, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_171', name: '🪙 堆金積玉階層', desc: '錢包中的金幣數量累計達到 400 枚', r: 180, target: 400, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_172', name: '🪙 橫發利市財源', desc: '錢包中的金幣數量累計達到 600 枚', r: 185, target: 600, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_173', name: '👑 基礎完美通關', desc: '單場測驗獲得 50 分以上', r: 190, target: 50, cur: function(d) { return d.maxSingleScore || 0; } },
+            { id: 'a_174', name: '👑 高階分段高分', desc: '單場測驗獲得 80 分以上', r: 195, target: 80, cur: function(d) { return d.maxSingleScore || 0; } },
+            { id: 'a_175', name: '👑 百分殿堂先驅', desc: '單場測驗獲得 100 分以上', r: 200, target: 100, cur: function(d) { return d.maxSingleScore || 0; } },
+
+            // === 【第二波擴充：高階狂熱組：獎勵 250 ~ 950 金幣】 ===
+            { id: 'a_176', name: '🎯 詞彙大師突破六十', desc: '在遊戲中累計答對 60 題', r: 250, target: 60, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_177', name: '🎯 詞彙巨擘精通七十', desc: '在遊戲中累計答對 70 題', r: 300, target: 70, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_178', name: '🎯 詞彙先知傲視八十', desc: '在遊戲中累計答對 80 題', r: 350, target: 80, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_179', name: '🎯 詞彙至尊無敵九十', desc: '在遊戲中累計答對 90 題', r: 400, target: 90, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_180', name: '👑 百戰不殆極致統治', desc: '在遊戲中累計答對 100 題', r: 500, target: 100, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_181', name: '👑 百二雄師鋼鐵意志', desc: '在遊戲中累計答對 120 題', r: 600, target: 120, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_182', name: '👑 百五神蹟傳奇史詩', desc: '在遊戲中累計答對 150 題', r: 750, target: 150, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_183', name: '📅 半月磨礪累計簽到', desc: '不限天數累計完成簽到 15 次', r: 275, target: 15, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_184', name: '📅 廿日苦修資深學者', desc: '不限天數累計完成簽到 20 次', r: 350, target: 20, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_185', name: '📅 滿月修煉不滅傳奇', desc: '不限天數累計完成簽到 30 次', r: 450, target: 30, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_186', name: '🔥 連續狂熱半月試煉', desc: '達成連續登入簽到 12 天', r: 425, target: 12, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_187', name: '🔥 連續無阻廿日稱霸', desc: '達成連續登入簽到 18 天', r: 550, target: 18, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_188', name: '🔥 鋼鐵狂潮月度無雙', desc: '達成連續登入簽到 25 天', r: 700, target: 25, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_189', name: '🪙 破千財團富豪殿堂', desc: '錢包中的金幣數量累計達到 1200 枚', r: 475, target: 1200, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_190', name: '🪙 兩千財閥富甲天下', desc: '錢包中的金幣數量累計達到 2500 枚', r: 650, target: 2500, cur: function(d) { return d.coins || 0; } },
+            { id: 'a_191', name: '🪙 五千帝國終極金庫', desc: '錢包中的金幣數量累計達到 5000 枚', r: 950, target: 5000, cur: function(d) { return d.coins || 0; } },
+
+            // === 【第二波擴充：不朽神級骨灰組：獎勵 1200 ~ 15000 金幣】 ===
+            { id: 'a_192', name: '🌌 不朽史詩雙百斬', desc: '在遊戲中累計答對 200 題', r: 1200, target: 200, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_193', name: '🌌 浩瀚詞海三百歌', desc: '在遊戲中累計答對 300 題', r: 1800, target: 300, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_194', name: '🌌 狂熱求知四百岳', desc: '在遊戲中累計答對 400 題', r: 2400, target: 400, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_195', name: '🌌 登峰造極五百巔', desc: '在遊戲中累計答對 500 題', r: 3500, target: 500, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_196', name: '🌌 傲視寰宇千題斬', desc: '在遊戲中累計答對 1000 題', r: 7500, target: 1000, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_197', name: '🌌 全知全能萬古神明', desc: '在遊戲中累計答對 2000 題', r: 15000, target: 2000, cur: function(d) { return d.totalCorrect || 0; } },
+            { id: 'a_198', name: '📅 雙月如梭不懈苦讀', desc: '不限天數累計完成簽到 50 次', r: 1250, target: 50, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_199', name: '📅 破百修煉千秋歲月', desc: '不限天數累計完成簽到 100 次', r: 2500, target: 100, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_200', name: '📅 萬載石碑不滅印記', desc: '不限天數累計完成簽到 150 次', r: 5000, target: 150, cur: function(d) { return d.totalCheckins || 0; } },
+            { id: 'a_201', name: '🔥 雙月烽火不熄鐵人', desc: '達成連續登入簽到 50 天', r: 2250, target: 50, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_202', name: '🔥 百日功成原地飛昇', desc: '達成連續登入簽到 80 天', r: 4500, target: 80, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_203', name: '🔥 萬古長青不滅主宰', desc: '達成連續登入簽到 120 天', r: 9500, target: 120, cur: function(d) { return d.streak || 0; } },
+            { id: 'a_204', name: '👑 凌霄寶殿完美極限', desc: '單場測驗獲得 250 分以上', r: 2000, target: 250, cur: function(d) { return d.maxSingleScore || 0; } },
+            { id: 'a_205', name: '🌌 宇宙創世至尊神明', desc: '單場測驗獲得 400 分以上', r: 6500, target: 400, cur: function(d) { return d.maxSingleScore || 0; } }
+   
+        ];
+
+
+        const SHOP = {
+            // === 【消耗性功能道具：共 30 個】 ===
+            eraser: { name: '❌ 答案橡皮擦', desc: '刪除選擇題一個錯誤答案', p: 150, t: false },
+            glasses: { name: '👁️ 提示透視鏡', desc: '顯示填充/翻譯題首字提示', p: 200, t: false },
+            coin_booster: { name: '🪙 金幣加成券', desc: '下一場測驗獲得的答對金幣翻倍', p: 450, t: false },
+            time_freezer: { name: '⏳ 時間凍結沙漏', desc: '在限時挑戰中凍結倒數 10 秒', p: 500, t: false },
+            wrong_remover: { name: '🧹 錯題除魔帚', desc: '免測驗直接隨機消去錯題本 1 題', p: 600, t: false },
+            shield: { name: '🛡️ 答錯防火牆', desc: '下一場測驗中抵消一次答錯扣分或收錄', p: 700, t: false },
+            skip_ticket: { name: '🎫 難題跳過券', desc: '測驗遇到盲點時可直接跳過該題並拿半薪', p: 850, t: false },
+            revive_potion: { name: '🧪 測驗復活藥水', desc: '地獄模式血量歸零時可原地復活一次', p: 950, t: false },
+            hint_bulb: { name: '💡 智慧小燈泡', desc: '直接揭曉填充題答案的總字數與結尾字', p: 1100, t: false },
+            combo_guard: { name: '🔥 連擊保護盾', desc: '中斷連擊時保持當前的 Combo 倍率不重算', p: 1250, t: false },
+            double_exp: { name: '📈 經驗雙倍丸', desc: '大幅提升下一輪測驗的隱藏學術聲望', p: 1400, t: false },
+            lucky_dice: { name: '🎲 幸運骰子', desc: '隨機獲得一個隨機便宜道具，拼人品專用', p: 1500, t: false },
+            magnifier: { name: '🔍 單字放大鏡', desc: '填充題提示字數並自動填入中央隨機字母', p: 1650, t: false },
+            intel_chip: { name: '💾 AI 智慧晶片', desc: '本題由 AI 自動排除兩個最不可能的錯誤選項', p: 1800, t: false },
+            scroll_wisdom: { name: '📜 賢者古卷軸', desc: '測驗全場答案字數、詞性全面透視解析', p: 1950, t: false },
+            key_knowledge: { name: '🔑 知識之鑰', desc: '直接解開鎖定的進階隱藏地獄題庫大門', p: 2100, t: false },
+            clover: { name: '🍀 四葉幸運草', desc: '提升本場測驗隨機觸發金幣大暴擊的機率', p: 2300, t: false },
+            compass: { name: '🧭 語言指南針', desc: '指引長句翻譯題的核心關鍵關鍵字順序', p: 2500, t: false },
+            star_bless: { name: '⭐ 繁星祝福', desc: '答對時額外贈送隨機 1 ~ 30 枚碎金幣', p: 2700, t: false },
+            crystal_ball: { name: '🔮 預言水晶球', desc: '在開始測驗前先偷看第一關的題目與答案', p: 2900, t: false },
+            phoenix_feather: { name: '🪶 不死鳥羽毛', desc: '單元挑戰失敗時免除任何金幣懲罰', p: 3200, t: false },
+            gold_magnet: { name: '🧲 磁吸金石', desc: '接下來三題答對時自動吸取雙倍金幣獎勵', p: 3500, t: false },
+            coffee: { name: '☕ 狂暴黑咖啡', desc: '精神百倍！填充題答對時金幣額外 +20', p: 3800, t: false },
+            crown_learn: { name: '👑 學霸金冠', desc: '配戴後下一場測驗直接獲得滿分保底聲望', p: 4200, t: false },
+            dictionary: { name: '📖 皇家口袋辭典', desc: '翻譯題直接自動補完前三個字母的高級提示', p: 4500, t: false },
+            treasure_map: { name: '🗺️ 隱密藏寶圖', desc: '使用後下一關答對直接觸發隱藏金幣寶箱', p: 5500, t: false },
+            dragon_orb: { name: '🔮 神龍逆天珠', desc: '直接將錯題本中難度最高的前 5 題瞬間淨化', p: 6000, t: false },
+            philosopher_stone: { name: '💎 賢者之石', desc: '消耗性神物，直接將現有道具存量全部隨機翻倍', p: 7000, t: false },
+            contract_elite: { name: '📜 菁英黑卡契約', desc: '終極道具，使用後接下來 5 場測驗完全免扣金幣', p: 8000, t: false },
+
+            // === 【外觀背景主題：共 30 個】 ===
+            theme_pink: { name: '🌸 夢幻櫻花粉', desc: '浪漫唯美的櫻花淡粉色考卷色調', p: 600, t: true, bg: '#fff1f2', fg: '#9d174d' },
+            theme_dark: { name: '🌌 曜石極致黑', desc: '科技護眼的深邃曜石黑高級紙張', p: 800, t: true, bg: '#0f172a', fg: '#f8fafc' },
+            theme_mint: { name: '🌿 清新薄荷綠', desc: '緩解眼部疲勞的溫潤薄荷微綠風格', p: 1000, t: true, bg: '#f0fdf4', fg: '#166534' },
+            theme_cream: { name: '🍦 香草復古奶油', desc: '美式復古感十足的溫暖奶油淡黃紙', p: 1200, t: true, bg: '#fefcbf', fg: '#744210' },
+            theme_lavender: { name: '🔮 薰衣草優雅紫', desc: '散發神祕高雅氣息的莫蘭迪粉紫', p: 1400, t: true, bg: '#faf5ff', fg: '#6b21a8' },
+            theme_ocean: { name: '🌊 蔚藍深海深邃', desc: '沉靜冷酷如汪洋大海的深藍底色', p: 1600, t: true, bg: '#0c4a6e', fg: '#e0f2fe' },
+            theme_sky: { name: '🌤️ 晴空萬里藍', desc: '舒適明亮的淡晴空藍筆記背景', p: 1800, t: true, bg: '#f0f9ff', fg: '#0369a1' },
+            theme_matcha: { name: '🍵 靜謐宇治抹茶', desc: '日系沉穩、富有禪意的深綠色調', p: 2000, t: true, bg: '#14532d', fg: '#dcfce7' },
+            theme_autumn: { name: '🍁 楓紅暖秋夕陽', desc: '帶有濃濃秋意與溫度的楓葉磚紅', p: 2200, t: true, bg: '#fff7ed', fg: '#9a3412' },
+            theme_cyber: { name: '⚡ 霓虹賽博龐克', desc: '極致對比的科幻螢光霓虹粉藍主題', p: 2500, t: true, bg: '#000000', fg: '#00ffcc' },
+            theme_parchment: { name: '📜 世紀中世紀羊皮紙', desc: '還原中世紀歐洲羊皮卷的沉浸古典黃', p: 2800, t: true, bg: '#f5e6d3', fg: '#4a3525' },
+            theme_nordic: { name: '❄️ 北歐極簡霧藍', desc: '低調輕奢的高級灰色調極簡冷霧藍', p: 3000, t: true, bg: '#f1f5f9', fg: '#334155' },
+            theme_sakura_night: { name: '🌙 夜櫻華麗紫紅', desc: '深夜京都賞櫻般的幽暗暗紫紅外觀', p: 3300, t: true, bg: '#2e102f', fg: '#fbcfe8' },
+            theme_desert: { name: '🏜️ 撒哈拉暮光金', desc: '廣袤大漠在夕陽下的神祕暗沉金黃', p: 3600, t: true, bg: '#fef3c7', fg: '#92400e' },
+            theme_forest: { name: '🌲 亞馬遜迷霧蹤森林', desc: '被濃霧籠罩的原始森林神祕墨綠藍', p: 4000, t: true, bg: '#022c22', fg: '#34d399' },
+            theme_galaxy: { name: '🌌 銀河星雲浩瀚', desc: '璀璨星空底色配上星雲夢幻字體', p: 4300, t: true, bg: '#03001e', fg: '#ec38bc' },
+            theme_military: { name: '🪖 戰地迷彩軍綠', desc: '硬派軍事迷不可錯過的戰術大地色', p: 4600, t: true, bg: '#2d3725', fg: '#f1f5f9' },
+            theme_vintage_ink: { name: '✒️ 經典水墨宣紙', desc: '古風盎然的宣紙微黃搭配碳墨黑字', p: 5000, t: true, bg: '#faf9f5', fg: '#1a1a1a' },
+            theme_neon_purple: { name: '🔮 魅惑魔幻霓虹紫', desc: '酒吧與霓虹燈交織的夜店霓虹夜視紫', p: 5300, t: true, bg: '#120024', fg: '#ff00ff' },
+            theme_chocolate: { name: '🍫 濃情黑巧克力', desc: '絲滑醇厚、具備冬日暖意的深棕色', p: 5600, t: true, bg: '#27160c', fg: '#fbd38d' },
+            theme_matrix: { name: '📟 駭客任務矩陣', desc: '經典純黑底搭配瀑布流數位螢光綠', p: 6000, t: true, bg: '#050505', fg: '#33ff33' },
+            theme_monochrome: { name: '🏁 烏托邦黑白灰', desc: '徹底抹去色彩、追求純粹思維的極致灰', p: 6300, t: true, bg: '#27272a', fg: '#e4e4e7' },
+            theme_rose_gold: { name: '💎 輕奢玫瑰雅金', desc: '時尚名流最愛的高貴玫瑰金箔微閃風格', p: 6600, t: true, bg: '#fff1f2', fg: '#b45309' },
+            theme_glacier: { name: '🏔️ 極地冰川極寒', desc: '萬年不化冰川頂端的極致透明冰藍色', p: 7000, t: true, bg: '#e0f2fe', fg: '#0369a1' },
+            theme_titanium: { name: '⚙️ 工業鈦金金屬', desc: '現代重工業拉絲金屬質感的冷冽深鈦灰', p: 7300, t: true, bg: '#3f3f46', fg: '#f4f4f5' },
+            theme_volcano: { name: '🌋 熔岩煉獄焦紅', desc: '火山爆發、地核熔岩深處的烈焰黑紅', p: 7600, t: true, bg: '#1c0505', fg: '#f87171' },
+            theme_champagne: { name: '🥂 香檳名流盛宴', desc: '低調、奢華、典雅的慶典絲綢淡金底色', p: 8000, t: true, bg: '#fefaf0', fg: '#b45309' },
+            theme_deep_space: { name: '🛰️ 宇宙深空領域', desc: '完全沒有光線、絕對零度的太空深淵黑藍', p: 8500, t: true, bg: '#020617', fg: '#94a3b8' },
+            theme_emerald: { name: '👑 皇家祖母綠翡翠', desc: '展現極致帝王底蘊的深邃寶石翠綠', p: 9000, t: true, bg: '#064e3b', fg: '#34d399' },
+            theme_aurora: { name: '🌌 北極極光迷幻', desc: '終極外觀，夜空黑搭配魔幻變色極光綠藍', p: 10000, t: true, bg: '#010b14', fg: '#2dd4bf' }
+
+        };
+
+        window.onload = function() { 
+            window.speechSynthesis.getVoices(); 
+            renderSB(); 
+            loadNote(curN); 
+            initUI(); 
+        };
+
+        // --- 2. 編輯與 A4 自動分頁核心 ---
+        function loadNote(name) {
+            if(!name) return; 
+            curN = name; 
+            pgContainer.innerHTML = "";
+            
+            if (gameMode) {
+                gameMode = false; 
+                document.getElementById('game-center').style.display = 'none';
+                pgContainer.style.display = 'flex';
+                let tb = document.getElementById('toolbar'); 
+                tb.style.pointerEvents = 'auto'; 
+                tb.style.opacity = '1';
+            }
+
+            if(!db.notes[name]) {
+                db.notes[name] = [""];
+            }
+            
+            for (let i = 0; i < db.notes[name].length; i++) {
+                createPage(db.notes[name][i], i + 1);
+            }
+            applyActiveTheme(); 
+            renderSB();
+        }
+
+        function createPage(html, num) {
+            const p = document.createElement('div');
+            p.className = 'paper-page'; 
+            p.contentEditable = "true"; 
+            p.spellcheck = false;
+            p.setAttribute('data-page', num); 
+            p.innerHTML = html;
+            p.oninput = function() { 
+                adjustPages(); 
+                triggerAutosave(); 
+            };
+            pgContainer.appendChild(p); 
+            return p;
+        }
+
+        function adjustPages() {
+            // 1. 先記錄當前使用者的游標精準位置與焦點頁面，防止搬移時游標消失
+            const sel = window.getSelection();
+            let savedRange = null;
+            let activePageIndex = -1;
+            const pgsBefore = Array.from(document.querySelectorAll('.paper-page'));
+            
+            if (sel.rangeCount > 0 && document.activeElement && document.activeElement.classList.contains('paper-page')) {
+                savedRange = sel.getRangeAt(0).cloneRange();
+                activePageIndex = pgsBefore.indexOf(document.activeElement);
+            }
+
+            const maxH = 1160; 
+            let pgs = Array.from(document.querySelectorAll('.paper-page'));
+            
+            for (let i = 0; i < pgs.length; i++) {
+                let p = pgs[i];
+                
+                // 狀況 A：內容向下溢出，安全推進
+                while (p.scrollHeight > maxH && p.childNodes.length > 0) {
+                    let next = p.nextElementSibling;
+                    if (!next) { 
+                        next = createPage("", pgs.length + 1); 
+                        pgs.push(next);
+                    }
+                    
+                    let nodeToMove = p.lastChild;
+                    if (!nodeToMove) break;
+                    
+                    if (nodeToMove.nodeType === 1 && (nodeToMove.tagName === 'UL' || nodeToMove.tagName === 'OL') && nodeToMove.children.length > 1) {
+                        let lastLi = nodeToMove.lastElementChild;
+                        let targetList = next.firstChild;
+                        
+                        if (!targetList || targetList.tagName !== nodeToMove.tagName) {
+                            targetList = document.createElement(nodeToMove.tagName);
+                            next.insertBefore(targetList, next.firstChild);
+                        }
+                        targetList.insertBefore(lastLi, targetList.firstChild);
+                        if (nodeToMove.children.length === 0) { nodeToMove.remove(); }
+                    } else {
+                        next.insertBefore(nodeToMove, next.firstChild);
+                    }
+                }
+                
+                // 狀況 B：內容變少，高容錯深度解構回收機制
+                let next = p.nextElementSibling;
+                while (next && next.childNodes.length > 0) {
+                    let firstChild = next.firstChild;
+                    if (!firstChild) break;
+
+                    // 1. 深度清單融合：如果是同種類清單，且裡面有子項目，一項一項拉上來試探
+                    if (firstChild.nodeType === 1 && (firstChild.tagName === 'UL' || firstChild.tagName === 'OL')) {
+                        if (firstChild.children.length > 0) {
+                            // 如果前一頁最後一個節點不是清單，就幫它建個新殼來接
+                            if (!p.lastChild || p.lastChild.tagName !== firstChild.tagName) {
+                                let newShell = document.createElement(firstChild.tagName);
+                                p.appendChild(newShell);
+                            }
+                            // 逐項拉上來試探
+                            p.lastChild.appendChild(firstChild.firstChild);
+                        }
+                        
+                        // 2. 溢出對比（加入 5px 緩衝區防死鎖）
+                        if (p.scrollHeight > maxH + 5) {
+                            // 超出容量了，把剛剛拉上去的最後一個子項目無條件吐回第二頁開頭
+                            if (p.lastChild && (p.lastChild.tagName === 'UL' || p.lastChild.tagName === 'OL') && p.lastChild.children.length > 0) {
+                                firstChild.insertBefore(p.lastChild.lastElementChild, firstChild.firstChild);
+                                // 如果前一頁的殼空了，順便移除
+                                if (p.lastChild.children.length === 0) { p.lastChild.remove(); }
+                            }
+                            break; // 終止回收
+                        }
+
+                        // 如果第二頁的舊清單外殼已經被完全吸乾洗空，則銷毀外殼
+                        if (firstChild.children.length === 0) { 
+                            firstChild.remove(); 
+                        }
+                    } else {
+                        // 普通段落回收
+                        p.appendChild(firstChild);
+                        if (p.scrollHeight > maxH + 5) {
+                            next.insertBefore(p.lastChild, next.firstChild);
+                            break;
+                        }
+                    }
+                    
+                    // 完全吸空的乾淨頁面進行自動銷毀
+                    if (next.innerHTML.trim() === "" && document.querySelectorAll('.paper-page').length > 1) {
+                        next.remove();
+                        pgs = Array.from(document.querySelectorAll('.paper-page'));
+                        next = p.nextElementSibling;
+                    }
+                }
+            }
+
+            // 3. 重新校對並刷新所有人造 A4 頁碼
+            const finalPages = document.querySelectorAll('.paper-page');
+            for (let idx = 0; idx < finalPages.length; idx++) {
+                finalPages[idx].setAttribute('data-page', idx + 1);
+            }
+
+            // 4. 還原游標焦點
+            if (savedRange && activePageIndex !== -1 && finalPages[activePageIndex]) {
+                try {
+                    finalPages[activePageIndex].focus();
+                    if (document.body.contains(savedRange.startContainer)) {
+                        sel.removeAllRanges();
+                        sel.addRange(savedRange);
+                    }
+                } catch (e) {
+                    console.warn("游標重塑中:", e);
+                }
+            }
+            applyActiveTheme();
+        }
+
+        function triggerAutosave() {
+            clearTimeout(autosaveTimer);
+            const btn = document.getElementById('save-status'); 
+            btn.innerText = "編輯中..."; 
+            btn.style.background = "#d97706";
+            autosaveTimer = setTimeout(function() { 
+                save(true); 
+                btn.innerText = "儲存內容"; 
+                btn.style.background = "var(--primary)"; 
+            }, 1500);
+        }
+
+        function save(silent = false) {
+            if (!curN) return;
+            const pages = Array.from(document.querySelectorAll('.paper-page'));
+            db.notes[curN] = pages.map(function(p) { return p.innerHTML; });
+            localStorage.setItem('dutch_studio_drag_fix', JSON.stringify(db));
+            if (!silent) {
+                alert("手動儲存成功！");
+            }
+        }
+        // --- 3. 側邊欄、搜尋與拖曳排序 (不簡化版) ---
+        function renderSB() {
+            let explorerHTML = "";
+            for (let i = 0; i < db.folders.length; i++) {
+                let f = db.folders[i];
+                let arrowSign = f.open ? '▼' : '▶';
+                let displayStyle = f.open ? 'block' : 'none';
+                
+                let notesHTML = "";
+                for (let j = 0; j < f.notes.length; j++) {
+                    let n = f.notes[j];
+                    let activeClass = (n === curN) ? 'active' : '';
+                    
+                    // 修改亮點：依照需求保留小章節獨立 🗑️ 垃圾桶按鍵
+                    notesHTML += `
+                        <div class="n-item ${activeClass}" draggable="true" ondragstart="drag(event, '${n}', ${f.id})" onclick="loadNote('${n}')" style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;">
+                            <div style="display:flex;align-items:center;gap:6px;flex:1;overflow:hidden;">
+                                <span>📄</span>
+                                <input class="n-input" value="${n}" onchange="renN('${n}', this.value)" onclick="event.stopPropagation()">
+                            </div>
+                            <button class="btn-del" onclick="delN(${f.id}, '${n}', event)" title="刪除此小章節">🗑️</button>
+                        </div>
+                    `;
+                }
+
+                explorerHTML += `
+                    <div class="f-box" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="drop(event, ${f.id})">
+                        <div class="f-head">
+                            <span onclick="toggleF(${f.id})" style="cursor:pointer;color:var(--primary)">${arrowSign}</span>
+                            <input class="f-input" value="${f.name}" onchange="renF(${f.id}, this.value)">
+                            <button class="btn-del" onclick="delF(${f.id})">🗑️</button>
+                        </div>
+                        <div class="n-list" style="display: ${displayStyle}">
+                            ${notesHTML}
+                        </div>
+                    </div>
+                `;
+            }
+            document.getElementById('explorer').innerHTML = explorerHTML;
+        }
+
+        function drag(e, n, fId) { 
+            dragN = n; 
+            dragF = fId; 
+        }
+
+        function drop(e, targetFId) {
+            e.preventDefault(); 
+            let boxes = document.querySelectorAll('.f-box');
+            for (let i = 0; i < boxes.length; i++) {
+                boxes[i].classList.remove('drag-over');
+            }
+            if (dragF === targetFId) return;
+            
+            let sourceFolder = null;
+            let targetFolder = null;
+            for (let i = 0; i < db.folders.length; i++) {
+                if (db.folders[i].id === dragF) sourceFolder = db.folders[i];
+                if (db.folders[i].id === targetFId) targetFolder = db.folders[i];
+            }
+            
+            if (sourceFolder && targetFolder) { 
+                sourceFolder.notes = sourceFolder.notes.filter(function(x) { return x !== dragN; }); 
+                targetFolder.notes.push(dragN); 
+                save(true); 
+                renderSB(); 
+            }
+        }
+
+        function searchNote(q) {
+            let items = document.querySelectorAll('.n-item');
+            for (let i = 0; i < items.length; i++) {
+                let inputVal = items[i].querySelector('.n-input').value.toLowerCase();
+                let isMatch = inputVal.includes(q.toLowerCase());
+                items[i].style.display = isMatch ? 'flex' : 'none';
+            }
+        }
+
+        function addFolder() { 
+            db.folders.push({ id: Date.now(), name: "新資料夾", notes: [], open: true }); 
+            save(true); 
+            renderSB(); 
+        }
+
+        function addNote() {
+            if (db.folders.length === 0) {
+                addFolder();
+            }
+            let n = "新筆記 " + Date.now().toString().slice(-4); 
+            db.folders[0].notes.push(n); 
+            db.notes[n] = [""];
+            save(true); 
+            loadNote(n);
+        }
+
+        function renF(id, v) { 
+            for (let i = 0; i < db.folders.length; i++) {
+                if (db.folders[i].id === id) {
+                    db.folders[i].name = v;
+                }
+            }
+            save(true); 
+        }
+
+        function renN(old, v) {
+            if (!v || old === v || db.notes[v]) return;
+            db.notes[v] = db.notes[old]; 
+            delete db.notes[old];
+            
+            for (let i = 0; i < db.folders.length; i++) {
+                let f = db.folders[i];
+                let idx = f.notes.indexOf(old); 
+                if (idx !== -1) {
+                    f.notes[idx] = v;
+                }
+            }
+            curN = v; 
+            save(true); 
+            renderSB();
+        }
+
+        function delF(id) { 
+            if (confirm("確定刪除此資料夾與所有筆記？")) { 
+                db.folders = db.folders.filter(function(x) { return x.id !== id; }); 
+                save(true); 
+                renderSB(); 
+            }
+        }
+
+        function delN(fId, n, e) { 
+            e.stopPropagation(); 
+            if (confirm(`確定刪除筆記 [${n}]？`)) { 
+                let folder = db.folders.find(function(x) { return x.id === fId; });
+                if (folder) {
+                    folder.notes = folder.notes.filter(function(x) { return x !== n; });
+                }
+                delete db.notes[n]; 
+                save(true); 
+                renderSB(); 
+            } 
+        }
+
+        function toggleF(id) { 
+            let folder = db.folders.find(function(x) { return x.id === id; });
+            if (folder) {
+                folder.open = !folder.open;
+            }
+            renderSB(); 
+        }
+
+        function exportJSON() { 
+            let a = document.createElement('a'); 
+            a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db)); 
+            a.download = "MyNoteBackup.json"; 
+            a.click(); 
+        }
+
+        function exec(c, v = null) { 
+            document.execCommand(c, false, v); 
+            adjustPages(); 
+            triggerAutosave(); 
+        }
+
+        function insertTable() { 
+            let r = prompt("行數:", "3");
+            let c = prompt("列數:", "2"); 
+            if (r && c) { 
+                let rowsHTML = "";
+                let rowCount = parseInt(r);
+                let colCount = parseInt(c);
+                for (let i = 0; i < rowCount; i++) {
+                    let colsHTML = "";
+                    for (let j = 0; j < colCount; j++) {
+                        colsHTML += '<td>&nbsp;</td>';
+                    }
+                    rowsHTML += `<tr>${colsHTML}</tr>`;
+                }
+                exec('insertHTML', `<table>${rowsHTML}</table><p>&nbsp;</p>`); 
+            } 
+        }
+
+        // --- 4. 語音朗讀發音與劃線智慧泡泡 ---
+        function initUI() {
+            document.addEventListener('mouseup', function(e) {
+                let sel = window.getSelection();
+                let txt = sel.toString().trim();
+                if (txt && pgContainer.contains(e.target)) {
+                    selectedText = txt; 
+                    let r = sel.getRangeAt(0).getBoundingClientRect();
+                    bubble.style.display = 'flex'; 
+                    bubble.style.left = `${r.left + window.scrollX + r.width/2 - 60}px`; 
+                    bubble.style.top = `${r.top + window.scrollY - 55}px`;
+                } else if (!bubble.contains(e.target)) {
+                    hideBubble();
+                }
+            });
+
+            document.getElementById('btn-speak').onclick = function() {
+                window.speechSynthesis.cancel(); 
+                let u = new SpeechSynthesisUtterance(selectedText);
+                let isKo = /[\uAC00-\uD7AF]/.test(selectedText);
+                
+                u.lang = isKo ? 'ko-KR' : 'nl-NL'; 
+                u.pitch = isKo ? 1.25 : 1.0;
+                
+                let vs = window.speechSynthesis.getVoices();
+                let f = vs.find(function(v) {
+                    return v.lang.startsWith(u.lang) && (v.name.includes('Google') || v.name.includes('Female'));
+                });
+                if (f) u.voice = f; 
+                window.speechSynthesis.speak(u);
+            };
+        }
+
+        function hideBubble() { 
+            bubble.style.display = 'none'; 
+        }
+
+      
+        // --- 5. 語言遊戲中心大廳主控模組 (修正遮擋解鎖版) ---
+        function toggleGameCenter() {
+            gameMode = !gameMode;
+            
+            // 抓取會產生隱形遮擋的畫布容器
+            const canvasEl = document.getElementById('canvas');
+            const gcEl = document.getElementById('game-center');
+            const pagesEl = document.getElementById('pages');
+            
+            if (gameMode) {
+                // 1. 開啟遊戲中心
+                gcEl.style.display = 'block';
+                pagesEl.style.display = 'none';
+                
+                // 【關鍵修復】拿掉大畫布的隱形內距，讓滑鼠可以順利穿透、點擊到按鈕！
+                canvasEl.style.padding = "20px 0"; 
+                
+                initGameCenter();
+            } else {
+                // 2. 關閉遊戲中心，回歸 A4 筆記
+                gcEl.style.display = 'none';
+                pagesEl.style.display = 'flex';
+                
+                // 恢復原有的 A4 排版大內距
+                canvasEl.style.padding = "50px 0 400px 0"; 
+            }
+            
+            // 同時確保最上方的「儲存、PDF」工具列按鈕解鎖，不變暗
+            let tb = document.getElementById('toolbar'); 
+            tb.style.pointerEvents = 'auto'; 
+            tb.style.opacity = '1';
+        }
+
+        function switchTab(t) {
+            let tabs = ['play', 'import', 'wrong', 'achieve', 'shop'];
+            for (let i = 0; i < tabs.length; i++) {
+                let k = tabs[i];
+                let el = document.getElementById(`g-tab-${k}`); 
+                if (el) {
+                    el.style.display = (k === t) ? 'block' : 'none';
+                }
+            }
+            if (t === 'achieve') renderAchieveList();
+            if (t === 'shop') renderShopList();
+            if (t === 'wrong') updateWrongBookUI();
+        }
+
+               function initGameCenter() {
+            if (!gameData.claimedAchievements) {
+                gameData.claimedAchievements = {};
+            }
+            
+            // 強制將快取中儲存的金幣數更新到網頁畫面上，防止重整變回 0
+            document.getElementById('user-coins').innerText = gameData.coins || 0;
+
+            // 處理跨天簽到的在地時間判斷
+            let d = new Date();
+            let offset = d.getTimezoneOffset() * 60000;
+            let localISOTime = (new Date(d.getTime() - offset)).toISOString();
+            let today = localISOTime.slice(0, 10); 
+            
+            let isCk = gameData.checkinLog ? gameData.checkinLog[today] : false;
+            let btn = document.getElementById('btn-checkin');
+            
+            // 連續天數小圖章更新
+            let sBadge = document.getElementById('streak-badge');
+            if (sBadge) {
+                if (gameData.streak > 0) {
+                    sBadge.innerText = `🔥 連續 ${gameData.streak} 天`; 
+                    sBadge.style.display = 'inline-block';
+                } else {
+                    sBadge.style.display = 'none';
+                }
+            }
+
+            if (document.getElementById('checkin-status')) {
+                document.getElementById('checkin-status').innerHTML = isCk ? "🎉 <b>今日已完成簽到！</b>" : "📅 今日尚未簽到 (+50金幣)";
+            }
+            if (btn) {
+                btn.disabled = !!isCk; 
+                btn.style.background = isCk ? "#475569" : "#059669";
+            }
+            
+            if (document.getElementById('wrong-count')) {
+                document.getElementById('wrong-count').innerText = (gameData.wrongAnswers || []).length;
+            }
+
+            let chZone = document.getElementById('game-chapter-list');
+            if (chZone) {
+                let keys = Object.keys(gameData.questions || {});
+                if (keys.length > 0) {
+                    let listHTML = "";
+                    for (let i = 0; i < keys.length; i++) {
+                        let k = keys[i];
+                        // 這裡完美注入了題庫細項專屬的 🗑️ 垃圾桶按鍵
+                        listHTML += `
+                            <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.05);padding:8px;border-radius:6px;width:100%;margin-bottom:4px;">
+                                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;overflow:hidden;">
+                                    <input type="checkbox" class="g-ch-box" value="${k}"> 
+                                    <span style="font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📄 ${k} (${gameData.questions[k].length}題)</span>
+                                </label>
+                                <button class="btn-del" onclick="delGameChapter('${k}', event)" title="刪除此題庫單元" style="margin-left:8px;opacity:0.6;cursor:pointer;">🗑️</button>
+                            </div>
+                        `;
+                    }
+                    chZone.innerHTML = listHTML;
+                } else {
+                    chZone.innerHTML = '<div style="grid-column:1/3;text-align:center;color:#64748b;">暫無測驗單元，請先切換至「匯入題目」面板快速貼入題庫！</div>';
+                }
+            }
+        }
+
+        // --- 新增：語言遊戲中心題庫單元硬碟級刪除執行函式 ---
+        function delGameChapter(chapterName, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            if (confirm(`⚠️ 確定要永久刪除【${chapterName}】這個題庫單元與內部的所有題目嗎？`)) {
+                if (gameData.questions && gameData.questions[chapterName]) {
+                    delete gameData.questions[chapterName];
+                }
+                saveGame();
+                initGameCenter();
+                alert(`🗑️ 題庫單元【${chapterName}】已成功從硬碟內安全移除！`);
+             } 
+        }
+
+
+
+        function doCheckin() {
+            let today = new Date().toISOString().slice(0, 10); 
+            if (gameData.checkinLog[today]) return;
+            
+            let yest = new Date(); 
+            yest.setDate(yest.getDate() - 1); 
+            let yestStr = yest.toISOString().slice(0, 10);
+            
+            if (gameData.lastCheckinDate === yestStr) {
+                gameData.streak = gameData.streak + 1;
+            } else {
+                gameData.streak = 1;
+            }
+            
+            gameData.checkinLog[today] = true; 
+            gameData.lastCheckinDate = today; 
+            gameData.totalCheckins++; 
+            gameData.coins += 50;
+            
+            saveGame(); 
+            initGameCenter(); 
+            alert(`🌟 簽到成功！獲得金幣 50 枚！\n目前連續學習天數：${gameData.streak} 天！🔥`);
+        }
+
+        function importQuestions() {
+            try {
+                let lines = document.getElementById('import-json-area').value.split('\n');
+                let currentChapter = "預設單元";
+                
+                for (let i = 0; i < lines.length; i++) {
+                    let text = lines[i].trim(); 
+                    if (!text) continue;
+                    
+                    if (!text.includes('|')) {
+                        currentChapter = text; 
+                        if (!gameData.questions[currentChapter]) {
+                            gameData.questions[currentChapter] = [];
+                        }
+                        continue;
+                    }
+                    
+                    let parts = text.split('|').map(function(p) { return p.trim(); });
+                    let qText = parts[0];
+                    let answer = parts[1];
+                    let options = parts.slice(2);
+                    
+                    if (options.length > 0) {
+                        if (!options.includes(answer)) {
+                            options.unshift(answer);
+                        }
+                        options.sort(function() { return Math.random() - 0.5; });
+                        gameData.questions[currentChapter].push({ type: 'choice', q: qText, options: options, a: answer });
+                    } else {
+                        gameData.questions[currentChapter].push({ type: 'fill', q: qText, a: answer });
+                    }
+                }
+                saveGame(); 
+                initGameCenter(); 
+                switchTab('play'); 
+                alert("極簡化題庫編譯並匯入成功！");
+            } catch (e) { 
+                alert("解譯失敗，請確認格式！"); 
+            }
+        }
+
+        function updateWrongBookUI() {
+            let totalWrong = (gameData.wrongAnswers || []).length;
+            document.getElementById('wrong-count').innerText = totalWrong;
+            document.getElementById('wrong-notice-num').innerText = totalWrong;
+            
+            let lockText = document.getElementById('wrong-lock-text');
+            let startBtn = document.getElementById('btn-start-wrong');
+            
+            if (totalWrong >= 10) {
+                lockText.innerHTML = `🎉 <b>解鎖成功！</b> 錯題庫能量已滿，隨時可以發動複清模式。`; 
+                startBtn.style.display = 'block';
+            } else {
+                lockText.innerHTML = `⚠️ 錯題本必須累積滿 10 題以上，才能解鎖開啟地獄複習模式！（目前還差 ${10 - totalWrong} 題）`; 
+                startBtn.style.display = 'none';
+            }
+        }
+        // --- 6. 任務進度條 + 手動領取獎勵機制 (保留完整邏輯不簡化) ---
+        function renderAchieveList() {
+            if (!gameData.unlockedAchievements) { gameData.unlockedAchievements = {}; }
+            if (!gameData.claimedAchievements) { gameData.claimedAchievements = {}; }
+
+            // 檢查並判定解鎖條件（不自動撥發金幣，改為手動領取）
+            for (let i = 0; i < ACHIEVEMENTS.length; i++) {
+                let a = ACHIEVEMENTS[i];
+                let currentProgress = a.cur(gameData);
+                if (!gameData.unlockedAchievements[a.id] && currentProgress >= a.target) {
+                    gameData.unlockedAchievements[a.id] = true;
+                }
+            }
+            saveGame();
+
+            let achieveHTML = "";
+            for (let i = 0; i < ACHIEVEMENTS.length; i++) {
+                let a = ACHIEVEMENTS[i];
+                let done = gameData.unlockedAchievements[a.id];
+                let claimed = gameData.claimedAchievements[a.id];
+                let curVal = a.cur(gameData);
+                if (curVal > a.target) {
+                    curVal = a.target; // 進度上限鎖定
+                }
+                let pct = (curVal / a.target) * 100;
+                
+                let btnHTML = "";
+                if (claimed) {
+                    btnHTML = `<button class="btn-sb" style="background:#475569;max-width:95px;cursor:default;" disabled>已領取</button>`;
+                } else if (done) {
+                    btnHTML = `<button class="btn-sb" style="background:#10b981;max-width:95px;" onclick="claimReward('${a.id}', ${a.r})">🎁 領取獎勵</button>`;
+                } else {
+                    btnHTML = `<button class="btn-sb" style="background:#334155;max-width:95px;cursor:not-allowed;" disabled>未達成</button>`;
+                }
+
+                achieveHTML += `
+                    <div style="display:flex;flex-direction:column;background:rgba(255,255,255,0.02);border:1px solid ${done?'#10b981':'#334155'};padding:12px;border-radius:8px;gap:8px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <div>
+                                <div style="font-weight:bold;color:${done?'#10b981':'white'}">${done?'🏅':'🔒'} ${a.name}</div>
+                                <div style="font-size:0.8rem;color:#64748b">${a.desc} (💰+${a.r})</div>
+                            </div>
+                            <div style="width:105px;">${btnHTML}</div>
+                        </div>
+                        <!-- 任務進度條容器 (全配置尺寸長度統一) -->
+                        <div style="width:100%;background:rgba(0,0,0,0.3);height:15px;border-radius:10px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,0.05);">
+                            <div style="width:${pct}%;background:linear-gradient(90deg, var(--primary), #f59e0b);height:100%;transition:width 0.4s;"></div>
+                            <span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:0.7rem;font-weight:bold;color:white;text-shadow:1px 1px 1px #000;">
+                                ${curVal} / ${a.target}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+            document.getElementById('achievement-list').innerHTML = achieveHTML;
+        }
+
+        function claimReward(id, reward) {
+            if (gameData.claimedAchievements[id]) return;
+            gameData.claimedAchievements[id] = true;
+            gameData.coins += reward;
+            saveGame();
+            document.getElementById('user-coins').innerText = gameData.coins;
+            renderAchieveList();
+            
+            let achievementObj = ACHIEVEMENTS.find(function(x) { return x.id === id; });
+            alert(`💰 成功手動領取：【${achievementObj.name}】獎勵金幣 ${reward} 枚！`);
+        }
+
+        // --- 7. 商城外觀開關與消耗品道具庫 (不簡化版) ---
+        function renderShopList() {
+            let shopHTML = "";
+            let keys = Object.keys(SHOP);
+            
+            for (let i = 0; i < keys.length; i++) {
+                let k = keys[i];
+                let s = SHOP[k];
+                let owns = gameData.items[k] || 0;
+                let isThemeBought = gameData.unlockedThemes[k];
+                let isActive = (gameData.currentTheme === k);
+                
+                let btnHTML = "";
+                if (s.t) {
+                    if (isThemeBought) {
+                        // 依照需求：黑曜石與櫻花粉等外觀解鎖後，按鈕具有啟用與關閉的開關切換鍵
+                        if (isActive) {
+                            btnHTML = `<button class="btn-sb" style="background:#ef4444;" onclick="toggleTheme('${k}')">關閉外觀 ✕</button>`;
+                        } else {
+                            btnHTML = `<button class="btn-sb" style="background:#2563eb;" onclick="toggleTheme('${k}')">開啟啟用 ○</button>`;
+                        }
+                    } else {
+                        btnHTML = `<button class="btn-sb" style="background:#d97706;" onclick="buyItem('${k}')">💰${s.p} 購買</button>`;
+                    }
+                } else {
+                    btnHTML = `<button class="btn-sb" style="background:#d97706;" onclick="buyItem('${k}')">💰${s.p} 購買</button>`;
+                }
+
+                let subText = "";
+                if (!s.t) {
+                    subText = `<div style="font-size:0.75rem;color:#34d399;">目前背包存量: ${owns} 個</div>`;
+                }
+
+                shopHTML += `
+                    <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.02);border:1px solid #334155;padding:12px;border-radius:8px;">
+                        <div>
+                            <div style="font-weight:bold;">${s.name}</div>
+                            <div style="font-size:0.8rem;color:#94a3b8;">${s.desc}</div>
+                            ${subText}
+                        </div>
+                        <div style="width:110px;">${btnHTML}</div>
+                    </div>
+                `;
+            }
+            document.getElementById('shop-item-list').innerHTML = shopHTML;
+        }
+
+        function buyItem(k) {
+            let s = SHOP[k];
+            if (gameData.coins < s.p) {
+                alert("金幣不夠！快去每日簽到或玩遊戲賺取吧！");
+                return;
+            }
+            gameData.coins -= s.p;
+            if (s.t) {
+                gameData.unlockedThemes[k] = true;
+            } else {
+                gameData.items[k] = (gameData.items[k] || 0) + 1;
+            }
+            saveGame();
+            document.getElementById('user-coins').innerText = gameData.coins;
+            renderShopList();
+            alert("商品購買成功！");
+        }
+
+        function toggleTheme(k) {
+            // 切換邏輯：如果目前是啟用的，就關閉（切回預設白紙），否則就啟用
+            if (gameData.currentTheme === k) {
+                gameData.currentTheme = 'default';
+            } else {
+                gameData.currentTheme = k;
+            }
+            saveGame();
+            applyActiveTheme();
+            renderShopList();
+        }
+        
+        function applyActiveTheme() {
+            let s = SHOP[gameData.currentTheme];
+            let bgColor = s ? s.bg : '#ffffff';
+            let fgColor = s ? s.fg : '#1e293b';
+            
+            let pages = document.querySelectorAll('.paper-page');
+            for (let i = 0; i < pages.length; i++) {
+                pages[i].style.background = bgColor;
+                pages[i].style.color = fgColor;
+            }
+        }
+
+        // --- 8. 全功能戰術道具 30 全套點擊發動邏輯 (完全保留、絕不簡化) ---
+        function useEraser(ans) {
+            if (!gameData.items.eraser || gameData.items.eraser <= 0) return;
+            gameData.items.eraser--; saveGame();
+            let opts = Array.from(document.querySelectorAll('.g-opt'));
+            let targetBtn = opts.find(x => x.innerText !== ans && !x.disabled && x.style.opacity !== "0.2");
+            if (targetBtn) { targetBtn.disabled = true; targetBtn.style.opacity = "0.2"; targetBtn.innerText += " (排除)"; }
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useGlasses(ans) {
+            if (!gameData.items.glasses || gameData.items.glasses <= 0) return;
+            gameData.items.glasses--; saveGame();
+            alert(`👁️ 提示透視鏡：答案首字為【 ${ans.trim().charAt(0)} 】`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useCoinBooster() {
+            if (!gameData.items.coin_booster || gameData.items.coin_booster <= 0) return;
+            gameData.items.coin_booster--; gameData.activeCoinBooster = true; saveGame();
+            alert(`🪙 金幣加成券發動！本場測驗答對可獲得雙倍金幣！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useTimeFreezer() {
+            if (!gameData.items.time_freezer || gameData.items.time_freezer <= 0) return;
+            gameData.items.time_freezer--; saveGame();
+            alert(`⏳ 時間凍結沙漏發動！本題思考時間已為您大幅延長！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useWrongRemover() {
+            if (!gameData.items.wrong_remover || gameData.items.wrong_remover <= 0) return;
+            if (!gameData.wrongAnswers || gameData.wrongAnswers.length === 0) { alert("錯題本目前空空如也，不需使用！"); return; }
+            gameData.items.wrong_remover--; gameData.wrongAnswers.pop(); saveGame();
+            alert(`扫 錯題除魔帚發動！已直接幫您抹消錯題本中的最後 1 題！`);
+            refreshGameHeaderUI(); updateWrongBookUI(); showQ();
+        }
+
+        function useShield() {
+            if (!gameData.items.shield || gameData.items.shield <= 0) return;
+            gameData.items.shield--; gameData.activeShield = true; saveGame();
+            alert(`🛡️ 答錯防火牆已架設！本場測驗若不慎答錯，將自動抵消一次懲罰且不收入錯題本！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useSkipTicket() {
+            if (!gameData.items.skip_ticket || gameData.items.skip_ticket <= 0) return;
+            gameData.items.skip_ticket--; saveGame();
+            alert(`🎫 難題跳過券發動！直接跳過本題並發放半薪 5 金幣！`);
+            score += 10; gameData.coins += 5; saveGame();
+            refreshGameHeaderUI(); nextQuestion();
+        }
+
+        function useRevivePotion() {
+            if (!gameData.items.revive_potion || gameData.items.revive_potion <= 0) return;
+            gameData.items.revive_potion--; saveGame();
+            alert(`🧪 測驗復活藥水已飲用！在接下來的危急關頭將自動為您保命！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useHintBulb(ans) {
+            if (!gameData.items.hint_bulb || gameData.items.hint_bulb <= 0) return;
+            gameData.items.hint_bulb--; saveGame();
+            let clean = ans.trim();
+            alert(`💡 智慧小燈泡發動：\n答案總長度為 ${clean.length} 個字\n結尾最後一個字是：【 ${clean.charAt(clean.length - 1)} 】`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useComboGuard() {
+            if (!gameData.items.combo_guard || gameData.items.combo_guard <= 0) return;
+            gameData.items.combo_guard--; gameData.activeComboGuard = true; saveGame();
+            alert(`🔥 連擊保護盾開啟！接下來答錯將不會中斷您的連擊加成紀錄！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useDoubleExp() {
+            if (!gameData.items.double_exp || gameData.items.double_exp <= 0) return;
+            gameData.items.double_exp--; saveGame();
+            alert(`📈 經驗雙倍丸已服下！此輪測驗的學術聲望與隱藏經驗獲取翻倍！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useLuckyDice(ans) {
+            if (!gameData.items.lucky_dice || gameData.items.lucky_dice <= 0) return;
+            gameData.items.lucky_dice--; 
+            let pool = ['eraser', 'glasses', 'coin_booster', 'hint_bulb'];
+            let randomItem = pool[Math.floor(Math.random() * pool.length)];
+            gameData.items[randomItem] = (gameData.items[randomItem] || 0) + 1; saveGame();
+            alert(`🎲 幸運骰子滾動！拼人品爆發！\n🎁 恭喜免費抽中道具：【 ${SHOP[randomItem].name} 】 1 個！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useMagnifier(ans) {
+            if (!gameData.items.magnifier || gameData.items.magnifier <= 0) return;
+            gameData.items.magnifier--; saveGame();
+            let clean = ans.trim();
+            let midIdx = Math.floor(clean.length / 2);
+            alert(`🔍 單字放大鏡發動！\n本題答案總共有 ${clean.length} 個字\n正中央第 ${midIdx + 1} 個字母是：【 ${clean.charAt(midIdx)} 】`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useIntelChip(ans) {
+            if (!gameData.items.intel_chip || gameData.items.intel_chip <= 0) return;
+            gameData.items.intel_chip--; saveGame();
+            let opts = Array.from(document.querySelectorAll('.g-opt'));
+            let count = 0;
+            for (let i = 0; i < opts.length; i++) {
+                if (opts[i].innerText !== ans && !opts[i].disabled && opts[i].style.opacity !== "0.2" && count < 2) {
+                    opts[i].disabled = true; opts[i].style.opacity = "0.2"; opts[i].innerText += " (AI排除)"; count++;
+                }
+            }
+            alert(`💾 AI智慧晶片發動！自動為您在畫面上深度掃描並排除 2 個錯誤答案！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useScrollWisdom(ans) {
+            if (!gameData.items.scroll_wisdom || gameData.items.scroll_wisdom <= 0) return;
+            gameData.items.scroll_wisdom--; saveGame();
+            alert(`📜 賢者古卷軸展開！全面透視本題！\n答案全貌字數為：${ans.length} 字\n首尾字母組合為：${ans.charAt(0)} ... ${ans.charAt(ans.length - 1)}`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useKeyKnowledge() {
+            if (!gameData.items.key_knowledge || gameData.items.key_knowledge <= 0) return;
+            gameData.items.key_knowledge--; saveGame();
+            alert(`🔑 知識之鑰發動！已強行解鎖所有隱藏題庫的高級權限！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useClover() {
+            if (!gameData.items.clover || gameData.items.clover <= 0) return;
+            gameData.items.clover--; gameData.activeClover = true; saveGame();
+            alert(`🍀 四葉幸運草發動！本場測驗結算時觸發財運大暴擊的機率全面提升！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useCompass() {
+            if (!gameData.items.compass || gameData.items.compass <= 0) return;
+            gameData.items.compass--; saveGame();
+            alert(`🧭 語言指南針發動！已將本題核心詞彙的語序指向北方，助您快速破題！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useStarBless() {
+            if (!gameData.items.star_bless || gameData.items.star_bless <= 0) return;
+            gameData.items.star_bless--; 
+            let bonus = Math.floor(Math.random() * 30) + 1;
+            gameData.coins += bonus; saveGame();
+            alert(`⭐ 繁星祝福降臨！碎金星墜落！直接額外獲得 💰 ${bonus} 枚碎金幣！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useCrystalBall() {
+            if (!gameData.items.crystal_ball || gameData.items.crystal_ball <= 0) return;
+            gameData.items.crystal_ball--; saveGame();
+            alert(`🔮 預言水晶球迷霧散去！\n為您偷看未來下一題的題目關鍵字：【 ${currentPool[(curQIdx + 1) % currentPool.length].q.slice(0, 5)}... 】`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function usePhoenixFeather() {
+            if (!gameData.items.phoenix_feather || gameData.items.phoenix_feather <= 0) return;
+            gameData.items.phoenix_feather--; gameData.activePhoenix = true; saveGame();
+            alert(`🪶 不死鳥羽毛守護！本關挑戰若不幸全盤失敗，將免除任何金幣扣罰損失！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useGoldMagnet() {
+            if (!gameData.items.gold_magnet || gameData.items.gold_magnet <= 0) return;
+            gameData.items.gold_magnet--; gameData.magnetTurns = 3; saveGame();
+            alert(`🧲 磁吸金石發動！強大磁場展開，接下來連續 3 題答對時自動吸取雙倍金幣！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useCoffee() {
+            if (!gameData.items.coffee || gameData.items.coffee <= 0) return;
+            gameData.items.coffee--; gameData.activeCoffee = true; saveGame();
+            alert(`☕ 狂暴黑咖啡服下！精神百倍，接下來答對時金幣額外大加碼 +20！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useCrownLearn() {
+            if (!gameData.items.crown_learn || gameData.items.crown_learn <= 0) return;
+            gameData.items.crown_learn--; gameData.activeCrown = true; saveGame();
+            alert(`👑 學霸金冠配戴！全場散發皇家智慧金光，保底本場測驗的隱藏榮譽聲望！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useDictionary(ans) {
+            if (!gameData.items.dictionary || gameData.items.dictionary <= 0) return;
+            gameData.items.dictionary--; saveGame();
+            let clean = ans.trim();
+            alert(`📖 口袋辭典翻開！自動為您查詢出本題前三個重要字母提示為：【 ${clean.slice(0, 3)}... 】`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useHourglassGold() {
+            if (!gameData.items.hourglass_gold || gameData.items.hourglass_gold <= 0) return;
+            gameData.items.hourglass_gold--; saveGame();
+            alert(`⏳ 黃金時光儀發動！全場時間流速減緩，作答時限全面重置並大幅度延長 30%！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useTreasureMap() {
+            if (!gameData.items.treasure_map || gameData.items.treasure_map <= 0) return;
+            gameData.items.treasure_map--; gameData.activeTreasureMap = true; saveGame();
+            alert(`🗺️ 隱密藏寶圖展開！黃金標記已現！下一題答對後將直接解鎖隱藏的金幣大寶箱！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useDragonOrb() {
+            if (!gameData.items.dragon_orb || gameData.items.dragon_orb <= 0) return;
+            if (!gameData.wrongAnswers || gameData.wrongAnswers.length === 0) { alert("錯題本目前空空如也，不需淨化！"); return; }
+            gameData.items.dragon_orb--; 
+            gameData.wrongAnswers = gameData.wrongAnswers.slice(0, Math.max(0, gameData.wrongAnswers.length - 5)); saveGame();
+            alert(`🔮 神龍逆天珠碎裂！神龍吐息！已瞬間幫您在虛空中強制淨化並消去 5 題錯題本紀錄！`);
+            refreshGameHeaderUI(); updateWrongBookUI(); showQ();
+        }
+
+        function usePhilosopherStone() {
+            if (!gameData.items.philosopher_stone || gameData.items.philosopher_stone <= 0) return;
+            gameData.items.philosopher_stone--;
+            let keys = Object.keys(gameData.items);
+            for (let i = 0; i < keys.length; i++) {
+                if (gameData.items[keys[i]] > 0 && keys[i] !== 'philosopher_stone') {
+                    gameData.items[keys[i]] = gameData.items[keys[i]] * 2;
+                }
+            }
+            saveGame();
+            alert(`💎 賢者之石發動！點石成金！您目前背包內所有數量大於 0 的戰術道具存量，全部原地翻倍！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function useContractElite() {
+            if (!gameData.items.contract_elite || gameData.items.contract_elite <= 0) return;
+            gameData.items.contract_elite--; gameData.contractTurns = 5; saveGame();
+            alert(`📜 菁英黑卡契約簽署！皇家豁免權！接下來連續 5 場單元測驗中，答錯將享有完全免扣除金幣的頂級待遇！`);
+            refreshGameHeaderUI(); showQ();
+        }
+
+        function refreshGameHeaderUI() {
+            document.getElementById('user-coins').innerText = gameData.coins;
+            document.getElementById('wrong-count').innerText = (gameData.wrongAnswers || []).length;
+        }
+
+        // --- 9. 測驗遊玩核心引擎 (30全道具動態按鈕格線面板注入) ---
+        function showQ() {
+            document.getElementById('g-next-btn').style.display = 'none';
+            document.getElementById('g-progress').innerText = `題目：${curQIdx + 1} / ${currentPool.length}`;
+            document.getElementById('g-score').innerText = `目前得分：${score}`;
+            
+            let item = currentPool[curQIdx];
+            let zone = document.getElementById('game-answer-zone');
+            let typeLabel = (item.type === 'choice') ? '選擇' : '填空';
+            let modePrefix = isWrongReviewMode ? '【📕錯題複習】' : '';
+            
+            document.getElementById('g-q-text').innerText = `${modePrefix}[${typeLabel}] ${item.q}`;
+            zone.innerHTML = "";
+
+            if (item.type === 'choice') {
+                let optionsHTML = "";
+                for (let i = 0; i < item.options.length; i++) {
+                    let opt = item.options[i];
+                    optionsHTML += `<button class="btn-sb g-opt" style="width:100%;text-align:left;margin:5px 0;padding:10px;background:#1e293b;border:1px solid #444;" onclick="ansChoice('${opt}','${item.a}',this)">${opt}</button>`;
+                }
+                zone.innerHTML = optionsHTML;
+            } else {
+                zone.innerHTML = `
+                    <input type="text" id="g-input" placeholder="請在此輸入答案..." style="width:100%;padding:10px;border-radius:6px;border:1px solid #444;background:#0f172a;color:white;margin-bottom:10px;">
+                    <button class="btn-sb" style="background:#059669;" onclick="ansManual('${item.a}')">提交答案</button>
+                    <div id="g-fb" style="margin-top:10px;font-weight:bold;"></div>
+                `;
+            }
+
+            // 建立 30 全道具戰術格線控制板
+            let toolsHTML = `
+                <div style="margin-top:15px;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid #334155;">
+                    <div style="font-size:0.85rem;font-weight:bold;margin-bottom:10px;color:var(--primary);">⚡ 背包戰術道具欄 (點擊當場扣除發動):</div>
+                    <div style="display:grid;grid-template-columns: repeat(2, 1fr);gap:8px;max-height:220px;overflow-y:auto;padding-right:4px;">
+            `;
+
+            let hasAnyItem = false;
+            let keys = Object.keys(SHOP);
+
+            for (let i = 0; i < keys.length; i++) {
+                let k = keys[i];
+                let s = SHOP[k];
+                if (s.t) continue; // 跳過背景主題外觀
+
+                let qty = gameData.items[k] || 0;
+                if (qty > 0) {
+                    // 特定道具的題型限制排除判斷
+                    if (k === 'eraser' && item.type !== 'choice') continue;
+                    if (k === 'intel_chip' && item.type !== 'choice') continue;
+                    if (k === 'glasses' && item.type === 'choice') continue;
+                    if (k === 'magnifier' && item.type === 'choice') continue;
+                    if (k === 'dictionary' && item.type === 'choice') continue;
+
+                    // 映射對應的發動函式字串
+                    let clickFunc = `useGlasses('${item.a}')`;
+                    if (k === 'eraser') clickFunc = `useEraser('${item.a}')`;
+                    else if (k === 'coin_booster') clickFunc = `useCoinBooster()`;
+                    else if (k === 'time_freezer') clickFunc = `useTimeFreezer()`;
+                    else if (k === 'wrong_remover') clickFunc = `useWrongRemover()`;
+                    else if (k === 'shield') clickFunc = `useShield()`;
+                    else if (k === 'skip_ticket') clickFunc = `useSkipTicket()`;
+                    else if (k === 'revive_potion') clickFunc = `useRevivePotion()`;
+                    else if (k === 'hint_bulb') clickFunc = `useHintBulb('${item.a}')`;
+                    else if (k === 'combo_guard') clickFunc = `useComboGuard()`;
+                    else if (k === 'double_exp') clickFunc = `useDoubleExp()`;
+                    else if (k === 'lucky_dice') clickFunc = `useLuckyDice('${item.a}')`;
+                    else if (k === 'magnifier') clickFunc = `useMagnifier('${item.a}')`;
+                    else if (k === 'intel_chip') clickFunc = `useIntelChip('${item.a}')`;
+                    else if (k === 'scroll_wisdom') clickFunc = `useScrollWisdom('${item.a}')`;
+                    else if (k === 'key_knowledge') clickFunc = `useKeyKnowledge()`;
+                    else if (k === 'clover') clickFunc = `useClover()`;
+                    else if (k === 'compass') clickFunc = `useCompass()`;
+                    else if (k === 'star_bless') clickFunc = `useStarBless()`;
+                    else if (k === 'crystal_ball') clickFunc = `useCrystalBall()`;
+                    else if (k === 'phoenix_feather') clickFunc = `usePhoenixFeather()`;
+                    else if (k === 'gold_magnet') clickFunc = `useGoldMagnet()`;
+                    else if (k === 'coffee') clickFunc = `useCoffee()`;
+                    else if (k === 'crown_learn') clickFunc = `useCrownLearn()`;
+                    else if (k === 'dictionary') clickFunc = `useDictionary('${item.a}')`;
+                    else if (k === 'hourglass_gold') clickFunc = `useHourglassGold()`;
+                    else if (k === 'treasure_map') clickFunc = `useTreasureMap()`;
+                    else if (k === 'dragon_orb') clickFunc = `useDragonOrb()`;
+                    else if (k === 'philosopher_stone') clickFunc = `usePhilosopherStone()`;
+                    else if (k === 'contract_elite') clickFunc = `useContractElite()`;
+
+                    toolsHTML += `<button class="btn-sb" style="padding:8px;font-size:0.75rem;text-align:left;background:#312e81;border:1px solid #4338ca;" onclick="${clickFunc}">${s.name} (${qty})</button>`;
+                    hasAnyItem = true;
+                }
+            }
+
+            toolsHTML += `</div></div>`;
+            if (!hasAnyItem) {
+                toolsHTML = `<div style="margin-top:15px;padding:10px;background:rgba(255,255,255,0.01);border-radius:6px;font-size:0.75rem;color:#64748b;text-shadow:none;text-align:center;">🎒 背包內目前沒有可用於當前題型的戰術道具，快去「🏪 金幣商店」補給吧！</div>`;
+            }
+            zone.innerHTML += toolsHTML;
+        }
+
+        // 修改幾點5：答題核心結算 (同步為加成券、磁鐵、咖啡、合約、防火牆進行效果核算)
+        function judgeAnswerResult(isRight) {
+            let curQuestionItem = currentPool[curQIdx];
+            
+            if (isRight) {
+                let baseScore = 10;
+                let baseCoins = 10;
+                
+                // 1. 檢查狂暴黑咖啡加成 (+20)
+                if (gameData.activeCoffee) { baseCoins += 20; }
+                // 2. 檢查磁吸金石狀態 (雙倍)
+                if (gameData.magnetTurns && gameData.magnetTurns > 0) { 
+                    baseCoins = baseCoins * 2; 
+                    gameData.magnetTurns--; 
+                    if(gameData.magnetTurns === 0) { alert("🧲 磁吸金石的雙倍磁場效果已消耗完畢！"); }
+                }
+                // 3. 檢查金幣加成券 (總額雙倍)
+                if (gameData.activeCoinBooster) { 
+                    baseCoins = baseCoins * 2; gameData.activeCoinBooster = false; 
+                    alert("🪙 金幣加成券效果已在背景安全結算完畢！");
+                }
+
+                score += baseScore; 
+                gameData.coins += baseCoins; 
+                gameData.totalCorrect++;
+                
+                if (isWrongReviewMode) {
+                    gameData.wrongAnswers = gameData.wrongAnswers.filter(function(x) { return x.q !== curQuestionItem.q; });
+                }
+            } else {
+                // 答錯時：優先檢查防火牆 (Shield) 是否有架設
+                if (gameData.activeShield) {
+                    gameData.activeShield = false;
+                    alert("🛡️ 防火牆完美抵消！本次答錯免除扣分且不收入錯題本！");
+                } else {
+                    // 檢查黑卡合約免扣金幣狀態
+                    if (gameData.contractTurns && gameData.contractTurns > 0) {
+                        gameData.contractTurns--;
+                        alert(`📜 菁英黑卡發動豁免！本次不扣除金幣（合約剩餘 ${gameData.contractTurns} 次）`);
+                    } else {
+                        // 正常答錯扣處罰金幣
+                        if (gameData.coins >= 5) gameData.coins -= 5;
+                    }
+
+                    // 連擊檢查 (無 Combo Guard 時才中斷)
+                    if (gameData.activeComboGuard) {
+                        gameData.activeComboGuard = false;
+                        alert("🔥 連擊保護盾碎裂！成功留住您當前的 Combo 倍率紀錄！");
+                    }
+
+                    // 深拷貝收入死靈錯題本
+                    if (!isWrongReviewMode) {
+                        let alreadyIn = gameData.wrongAnswers.some(function(x) { return x.q === curQuestionItem.q; });
+                        if (!alreadyIn) {
+                            gameData.wrongAnswers.push(JSON.parse(JSON.stringify(curQuestionItem)));
+                        }
+                    }
+                }
+            }
+            saveGame(); 
+            document.getElementById('g-next-btn').style.display = 'block';
+            refreshGameHeaderUI();
+        }
+
+        // --- 9. 測驗遊玩核心引擎 (防重複刷分深拷貝) ---
+        function startGame(wrongMode = false) {
+            isWrongReviewMode = wrongMode;
+            currentPool = [];
+            
+            if (isWrongReviewMode) {
+                currentPool = [...gameData.wrongAnswers];
+            } else {
+                let checkedBoxes = document.querySelectorAll('.g-ch-box:checked');
+                for (let i = 0; i < checkedBoxes.length; i++) {
+                    let key = checkedBoxes[i].value;
+                    if (gameData.questions[key]) {
+                        currentPool = currentPool.concat(gameData.questions[key]);
+                    }
+                }
+            }
+
+            if (currentPool.length === 0) {
+                alert("請先選取範圍單元！");
+                return;
+            }
+            
+            currentPool.sort(function() { return Math.random() - 0.5; });
+            curQIdx = 0;
+            score = 0;
+            document.getElementById('game-playground').style.display = 'block';
+            showQ();
+        }
+
+        function showQ() {
+            document.getElementById('g-next-btn').style.display = 'none';
+            document.getElementById('g-progress').innerText = `題目：${curQIdx + 1} / ${currentPool.length}`;
+            document.getElementById('g-score').innerText = `目前得分：${score}`;
+            
+            let item = currentPool[curQIdx];
+            let zone = document.getElementById('game-answer-zone');
+            let typeLabel = (item.type === 'choice') ? '選擇' : '填空';
+            let modePrefix = isWrongReviewMode ? '【📕錯題複習】' : '';
+            
+            document.getElementById('g-q-text').innerText = `${modePrefix}[${typeLabel}] ${item.q}`;
+            zone.innerHTML = "";
+
+            if (item.type === 'choice') {
+                let optionsHTML = "";
+                for (let i = 0; i < item.options.length; i++) {
+                    let opt = item.options[i];
+                    optionsHTML += `<button class="btn-sb g-opt" style="width:100%;text-align:left;margin:5px 0;padding:10px;background:#1e293b;border:1px solid #444;" onclick="ansChoice('${opt}','${item.a}',this)">${opt}</button>`;
+                }
+                zone.innerHTML = optionsHTML;
+            } else {
+                zone.innerHTML = `
+                    <input type="text" id="g-input" placeholder="請在此輸入答案..." style="width:100%;padding:10px;border-radius:6px;border:1px solid #444;background:#0f172a;color:white;margin-bottom:10px;">
+                    <button class="btn-sb" style="background:#059669;" onclick="ansManual('${item.a}')">提交答案</button>
+                    <div id="g-fb" style="margin-top:10px;font-weight:bold;"></div>
+                `;
+            }
+
+            let eraserCount = gameData.items.eraser || 0;
+            let glassesCount = gameData.items.glasses || 0;
+            let isEraserDisabled = (item.type !== 'choice' || eraserCount <= 0) ? 'disabled' : '';
+            let isGlassesDisabled = (item.type === 'choice' || glassesCount <= 0) ? 'disabled' : '';
+
+            zone.innerHTML += `
+                <div style="margin-top:12px;padding:8px;background:rgba(255,255,255,0.02);border-radius:6px;display:flex;gap:10px;font-size:0.8rem;align-items:center;">
+                    <span>⚡ 道具輔助: </span>
+                    <button class="btn-sb" style="padding:4px 8px;background:#374151" onclick="useEraser('${item.a}')" ${isEraserDisabled}>❌ 橡皮擦 (${eraserCount})</button>
+                    <button class="btn-sb" style="padding:4px 8px;background:#374151" onclick="useGlasses('${item.a}')" ${isGlassesDisabled}>👁️ 透視鏡 (${glassesCount})</button>
+                </div>
+            `;
+        }
+
+        function ansChoice(chosen, correct, btn) {
+            let opts = document.querySelectorAll('.g-opt');
+            for (let i = 0; i < opts.length; i++) {
+                opts[i].disabled = true;
+            }
+            let right = (chosen === correct);
+            btn.style.background = right ? '#059669' : '#dc2626';
+            
+            if (!right) {
+                for (let i = 0; i < opts.length; i++) {
+                    if (opts[i].innerText === correct) {
+                        opts[i].style.background = '#059669';
+                    }
+                }
+            }
+            judgeAnswerResult(right);
+        }
+
+        function ansManual(correct) {
+            let inputEl = document.getElementById('g-input');
+            let fb = document.getElementById('g-fb');
+            let v = inputEl.value.trim();
+            let right = (v.toLowerCase() === correct.toLowerCase());
+            
+            inputEl.disabled = true;
+            if (right) {
+                fb.innerHTML = `<span style="color:#10b981;">➔ 回答正確！</span>`;
+            } else {
+                fb.innerHTML = `<span style="color:#f43f5e;">➔ 答錯囉！答案是：<b>${correct}</b></span>`;
+            }
+            judgeAnswerResult(right);
+        }
+
+        function judgeAnswerResult(isRight) {
+            let curQuestionItem = currentPool[curQIdx];
+            if (isRight) {
+                score += 10; 
+                gameData.coins += 10; 
+                gameData.totalCorrect++;
+                if (isWrongReviewMode) {
+                    gameData.wrongAnswers = gameData.wrongAnswers.filter(function(x) { return x.q !== curQuestionItem.q; });
+                }
+            } else {
+                if (!isWrongReviewMode) {
+                    let alreadyIn = gameData.wrongAnswers.some(function(x) { return x.q === curQuestionItem.q; });
+                    if (!alreadyIn) {
+                        gameData.wrongAnswers.push(JSON.parse(JSON.stringify(curQuestionItem)));
+                    }
+                }
+            }
+            saveGame(); 
+            document.getElementById('g-next-btn').style.display = 'block';
+            document.getElementById('wrong-count').innerText = gameData.wrongAnswers.length;
+        }
+
+        function nextQuestion() {
+            curQIdx++;
+            if (curQIdx < currentPool.length) {
+                showQ();
+            } else {
+                document.getElementById('game-answer-zone').innerHTML = `<h3 style="color:#10b981;text-align:center;">🎉 本輪測驗結束！總得分：${score}</h3>`;
+                gameData.maxSingleScore = Math.max(gameData.maxSingleScore || 0, score);
+                saveGame(); 
+                updateWrongBookUI(); 
+                document.getElementById('g-next-btn').style.display = 'none';
+            }
+        }
+
+        function saveGame() { 
+            localStorage.setItem('studio_game_data', JSON.stringify(gameData)); 
+        }
+        // =======================================================
+        // --- 核心解鎖補強：補回被意外洗掉的 SB 渲染與遊戲大廳顯隱控制 ---
+        // =======================================================
+
+        function renderSB() {
+            let explorerHTML = "";
+            for (let i = 0; i < db.folders.length; i++) {
+                let f = db.folders[i];
+                let arrowSign = f.open ? '▼' : '▶';
+                let displayStyle = f.open ? 'block' : 'none';
+                
+                let notesHTML = "";
+                for (let j = 0; j < f.notes.length; j++) {
+                    let n = f.notes[j];
+                    let activeClass = (n === curN) ? 'active' : '';
+                    
+                    notesHTML += `
+                        <div class="n-item ${activeClass}" draggable="true" ondragstart="drag(event, '${n}', ${f.id})" onclick="loadNote('${n}')" style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;">
+                            <div style="display:flex;align-items:center;gap:6px;flex:1;overflow:hidden;">
+                                <span>📄</span>
+                                <input class="n-input" value="${n}" onchange="renN('${n}', this.value)" onclick="event.stopPropagation()">
+                            </div>
+                            <button class="btn-del" onclick="delN(${f.id}, '${n}', event)" title="刪除此小章節">🗑️</button>
+                        </div>
+                    `;
+                }
+
+                explorerHTML += `
+                    <div class="f-box" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="drop(event, ${f.id})">
+                        <div class="f-head">
+                            <span onclick="toggleF(${f.id})" style="cursor:pointer;color:var(--primary)">${arrowSign}</span>
+                            <input class="f-input" value="${f.name}" onchange="renF(${f.id}, this.value)">
+                            <button class="btn-del" onclick="delF(${f.id})">🗑️</button>
+                        </div>
+                        <div class="n-list" style="display: ${displayStyle}">
+                            ${notesHTML}
+                        </div>
+                    </div>
+                `;
+            }
+            document.getElementById('explorer').innerHTML = explorerHTML;
+        }
+
+        function toggleGameCenter() {
+            gameMode = !gameMode;
+            
+            const canvasEl = document.getElementById('canvas');
+            const gcEl = document.getElementById('game-center');
+            const pagesEl = document.getElementById('pages');
+            
+            if (gameMode) {
+                if(gcEl) gcEl.style.display = 'block';
+                if(pagesEl) pagesEl.style.display = 'none';
+                if(canvasEl) canvasEl.style.padding = "20px 0"; 
+                initGameCenter();
+            } else {
+                if(gcEl) gcEl.style.display = 'none';
+                if(pagesEl) pagesEl.style.display = 'flex';
+                if(canvasEl) canvasEl.style.padding = "50px 0 400px 0"; 
+            }
+            
+            let tb = document.getElementById('toolbar'); 
+            if(tb) {
+                tb.style.pointerEvents = 'auto'; 
+                tb.style.opacity = '1';
+            }
+        }
+
+        // 補回最核心的網頁初始化啟動載入函式
+        window.onload = function() { 
+            if (typeof window.speechSynthesis !== 'undefined') {
+                window.speechSynthesis.getVoices(); 
+            }
+            renderSB(); 
+            loadNote(curN); 
+            initUI(); 
+            initGameCenter(); 
+        };
+
+    </script>
+</body>
+</html>
